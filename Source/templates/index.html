@@ -7,7 +7,16 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <h1>Smart Study Space Reservation</h1>
+  <header class="main-header">
+    <div class="header-left">
+      <h1>Smart Study Space Reservation</h1>
+    </div>
+    <div class="header-right">
+      <span>Hello, {{ user }}</span>
+      <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+  </header>
+
   <table id="spaces-table">
     <thead>
       <tr><th>Name</th><th>Type</th><th>Equipment</th><th>Status</th><th>Action</th></tr>
