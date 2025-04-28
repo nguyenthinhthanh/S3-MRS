@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - S3‑MRS</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-image">
+      <img src="/static/images/login-illustration.png" alt="Study illustration">
+      <div class="auth-text">
+        <h1>Optimize space,<br>enhance learning experience</h1>
+        <p>Smart study space management and reservation system</p>
+      </div>
+    </div>
+    <div class="auth-form">
+      <h2>Welcome to S3‑MRS</h2>
+      {% if error %}<div class="error">{{ error }}</div>{% endif %}
+      <form method="POST">
+        <label for="username">User name</label>
+        <input type="text" id="username" name="username" placeholder="Enter your User name" required>
+
+        <label for="password">Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="password" name="password" placeholder="Enter your Password" required>
+          <span class="toggle-password">👁️</span>
+        </div>
+
+        <div class="form-links">
+          <label><input type="checkbox" name="remember"> Remember me</label>
+          <a href="#">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Login</button>
+        <button type="button" class="btn-secondary">Register</button>
+      </form>
+    </div>
+  </div>
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>
