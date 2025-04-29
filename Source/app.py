@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template, redirect, url_for, session
+from flask import Flask, jsonify, request, render_template, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -7,7 +7,7 @@ app.secret_key = 's3mrs_demo_secret'  # dùng cho session
 # Dummy user (hard-coded)
 USERS = {'student1': 'password123'}
 
-# In‑memory data store
+# In-memory spaces data
 spaces = [
     {"id": 1, "name": "Room A101", "type": "Group Study",
      "equipment": ["Whiteboard", "Projector", "AC"],
@@ -21,19 +21,37 @@ spaces = [
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form['username']
+        password = request.form['password']
         if USERS.get(username) == password:
             session['user'] = username
             return redirect(url_for('index'))
         else:
-            return render_template('login.html', error='Invalid credentials')
-    return render_template('login.html', error=None)
+            flash('Invalid username or password', 'error')
+    return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        confirm = request.form['confirm']
+        if not username or not password:
+            flash('Username and password required', 'error')
+        elif password != confirm:
+            flash('Passwords do not match', 'error')
+        elif username in USERS:
+            flash('Username already exists', 'error')
+        else:
+            USERS[username] = password
+            flash('Registration successful! Please log in.', 'success')
+            return redirect(url_for('login'))
+    return render_template('register.html')
 
 @app.route('/')
 def index():

@@ -63,6 +63,24 @@
   background: rgba(107, 78, 255, 0.2);
   color: #6b4eff;
 }
+
+.btn-secondary-register, .btn-primary-register {
+  width: 48%;
+  padding: 12px;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+.btn-primary-register {
+  background: linear-gradient(90deg, #6b4eff, #9b54ff);
+  color: #fff;
+}
+.btn-secondary-register {
+  background: rgba(107, 78, 255, 0.2);
+  color: #6b4eff;
+}
+
 .error {
   color: #d33;
   margin-bottom: 10px;
@@ -81,4 +99,18 @@
   background: #e74c3c;
   color: #fff;
   text-decoration: none;
+}
+
+/* Thêm style cho flash messages */
+.flash.error { color: #e74c3c; margin-bottom: 10px; }
+.flash.success { color: #27ae60; margin-bottom: 10px; }
+
+/* Khoảng cách giữa ô Confirm Password và nút Register */
+/* Khoảng cách giữa ô Confirm Password và nút Register */
+.auth-form .btn-primary-register {
+  margin-top: 20px;
+}
+
+.auth-form .btn-secondary-register {
+  margin-top: 20px;
 }

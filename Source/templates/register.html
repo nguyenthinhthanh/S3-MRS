@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Register - S3-MRS</title>
+        <link rel="stylesheet" href="/static/css/style.css">
+      </head>
+<body>
+  <div class="auth-container">
+    <div class="auth-image">
+        <img src="/static/images/login-illustration.png" alt="Study illustration">
+        <div class="auth-text">
+          <h1>Optimize space,<br>enhance learning experience</h1>
+          <p>Smart study space management and reservation system</p>
+        </div>
+    </div>
+    <div class="auth-form">
+      <h2>Register your account</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST">
+        <label>Username<input type="text" name="username" required></label>
+        <label>Password<input type="password" name="password" required></label>
+        <label>Confirm Password<input type="password" name="confirm" required></label>
+        <button type="button" class="btn-secondary-register" onclick="window.location.href='/login'">Login</button>
+        <button type="submit" class="btn-primary-register">Register</button>
+      </form>
+      <p>Already have an account? <a href="/login">Login here</a>.</p>
+    </div>
+  </div>
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>
