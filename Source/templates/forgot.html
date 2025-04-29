@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forgot Password - S3-MRS</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-image">
+      <img src="/static/images/login-illustration.png" alt="Study illustration">
+      <div class="auth-text">
+        <h1>Optimize space,<br>enhance learning experience</h1>
+        <p>Smart study space management and reservation system</p>
+      </div>
+    </div>
+    <div class="auth-form">
+      <!-- Toggle between Login/Forgot/Register -->
+      <!-- <div class="auth-toggle">
+        <button class="toggle" onclick="location.href='/login'">Login</button>
+        <button class="toggle" onclick="location.href='/register'">Register</button>
+        <button class="toggle active" onclick="location.href='/forgot'">Forgot</button>
+      </div> -->
+
+      <h2>Forgot Password</h2>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="POST">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your Username" required>
+
+        <label for="new_password">New Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="new_password" name="new_password" placeholder="Enter your New Password" required>
+        </div>
+
+        <label for="confirm_password">Confirm Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your New Password" required>
+        </div>
+
+        <div class="auth-buttons">
+          <button type="button" class="btn-secondary-register" onclick="location.href='/login'">Login</button>
+          <button type="submit" class="btn-primary-register">Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script src="/static/js/auth.js"></script>
+</body>
+</html>

@@ -53,6 +53,24 @@ def register():
             return redirect(url_for('login'))
     return render_template('register.html')
 
+@app.route('/forgot', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        username = request.form['username']
+        new_pass = request.form['new_password']
+        confirm = request.form['confirm_password']
+        if username not in USERS:
+            flash('Username does not exist', 'error')
+        elif not new_pass:
+            flash('Password cannot be empty', 'error')
+        elif new_pass != confirm:
+            flash('Passwords do not match', 'error')
+        else:
+            USERS[username] = new_pass
+            flash('Password updated! Please log in.', 'success')
+            return redirect(url_for('login'))
+    return render_template('forgot.html')
+
 @app.route('/')
 def index():
     if 'user' not in session:

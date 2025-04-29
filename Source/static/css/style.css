@@ -106,7 +106,6 @@
 .flash.success { color: #27ae60; margin-bottom: 10px; }
 
 /* Khoảng cách giữa ô Confirm Password và nút Register */
-/* Khoảng cách giữa ô Confirm Password và nút Register */
 .auth-form .btn-primary-register {
   margin-top: 20px;
 }
