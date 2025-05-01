@@ -87,7 +87,7 @@ def forgot_password():
 def index():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('index.html', user=session['user'])
+    return redirect(url_for('home'))
 
 @app.route('/api/spaces')
 def get_spaces():

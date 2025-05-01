@@ -23,8 +23,17 @@
     <div class="reminder">
       <h4>REMINDER</h4>
       <ul>
-        <li><span class="dot green"></span> Sun 16 July at 5:00 pm</li>
-        <li><span class="dot orange"></span> Mon 17 July at 7:00 am</li>
+        {% for sp in reservations %}
+          {% if sp.status == 'reserved' and sp.reserved_until %}
+          <li>
+            <span class="dot green"></span>
+            {{ sp.name }} at {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}
+          </li>
+          {% endif %}
+        {% endfor %}
+        {% if reservations|selectattr('status','equalto','reserved')|list|length == 0 %}
+          <li>No upcoming reservations</li>
+        {% endif %}
       </ul>
     </div>
   </aside>

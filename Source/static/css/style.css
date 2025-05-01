@@ -101,6 +101,7 @@
   text-decoration: none;
 }
 
+
 /* Thêm style cho flash messages */
 .flash.error { color: #e74c3c; margin-bottom: 10px; }
 .flash.success { color: #27ae60; margin-bottom: 10px; }
@@ -112,6 +113,20 @@
 
 .auth-form .btn-secondary-register {
   margin-top: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.action-buttons button {
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
 }
 
 /* --- TÙY CHỈNH GRID CHO RESERVATION CARDS --- */
