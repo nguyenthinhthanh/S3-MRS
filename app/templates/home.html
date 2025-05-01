@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Home - S3-MRS{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+  <h2>Reservations</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Quiet Study Room</h3>
+      <p>Single desk with basic devices</p>
+      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+    </div>
+    <div class="card">
+      <h3>Open Study Area</h3>
+      <p>Open space with shared tables</p>
+      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+    </div>
+    <div class="card">
+      <h3>Group Room</h3>
+      <p>Medium-size room with white table</p>
+      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+    </div>
+  </div>
+  <h3>My Reservations</h3>
+  <section class="my-reservations">
+    <div class="cards">
+      {% for sp in reservations %}
+      <div class="card">
+        <h3>{{ sp.name }}</h3>
+        <p>{{ sp.type }}</p>
+        {% if sp.status in ['reserved', 'occupied'] %}
+        <small>
+          {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}
+          <span class="status {{ sp.status }}">{{ sp.status.title() }}</span>
+          {% if sp.location %}in {{ sp.location }}{% endif %}
+        </small>
+        {% endif %}
+        <div class="action-buttons" style="display: flex; gap: 10px;">
+            <button class="btn-primary-register" onclick="location.href='/reservations'">Change</button>
+        
+            {% if sp.status in ['reserved', 'occupied'] %}
+            <form method="POST" action="/reservations" style="margin: 0; display: inline-block;">
+                <input type="hidden" name="space_id" value="{{ sp.id }}">
+                <button type="submit" name="action" value="checkout" class="btn-secondary cancel-btn" style="width: 100%;">Cancel</button>
+            </form>
+            {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+      {% if reservations|length == 0 %}
+      <p>No reservations yet. <a href="/reservations">Make one now!</a></p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

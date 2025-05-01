@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S3-MRS Login/Register</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Login CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+
+  <div class="full-page">
+    <!-- Left: Image -->
+    <div class="left-img d-none d-md-block">
+      <img src="{{ url_for('static', filename='images/Login.png') }}" alt="Login Image" />
+    </div>
+
+    <!-- Right: Form -->
+    <div class="right-form">
+      <div class="form-wrapper">
+        <h5 class="text-center mb-3">Welcome to S3-MRS</h5>
+
+        <div class="switch-pill mb-4 mx-auto">
+          <button id="btnLogin" class="switch-btn active" onclick="showForm('login')">Login</button>
+          <button id="btnRegister" class="switch-btn" onclick="showForm('register')">Register</button>
+        </div>
+        
+
+        <p class="text-center text-muted mb-4" style="font-size: 14px;">
+          Smart Study Space Management and Reservation System at HCMUT
+        </p>
+
+        <!-- Login Form -->
+        <form id="formLogin" method="POST">
+          <div class="mb-3">
+            <label for="loginUsername" class="form-label">User name</label>
+            <input type="text" class="form-control" id="loginUsername" name="username" placeholder="Enter your User name" />
+          </div>
+
+          <div class="mb-3">
+            <label for="loginPassword" class="form-label">Password</label>
+            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="Enter your Password" />
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe" />
+              <label class="form-check-label" for="rememberMe">Remember me</label>
+            </div>
+            <a href="forgot-password" class="small">Forgot Password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-submit w-100">Login</button>
+        </form>
+
+        <!-- Register Form -->
+        <form id="formRegister" style="display: none;">
+          <div class="mb-3">
+            <label for="regUsername" class="form-label">User name</label>
+            <input type="text" class="form-control" id="regUsername" placeholder="Choose a username" />
+          </div>
+
+          <div class="mb-3">
+            <label for="regEmail" class="form-label">Email</label>
+            <input type="email" class="form-control" id="regEmail" placeholder="Enter your email" />
+          </div>
+
+          <div class="mb-3">
+            <label for="regPassword" class="form-label">Password</label>
+            <input type="password" class="form-control" id="regPassword" placeholder="Create a password" />
+          </div>
+
+          <button type="submit" class="btn btn-submit w-100">Register</button>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} mt-3 text-center">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Toggle form -->
+  <script>
+    function showForm(type) {
+      const loginForm = document.getElementById('formLogin');
+      const registerForm = document.getElementById('formRegister');
+      const btnLogin = document.getElementById('btnLogin');
+      const btnRegister = document.getElementById('btnRegister');
+
+      if (type === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        btnLogin.classList.add('active');
+        btnRegister.classList.remove('active');
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        btnLogin.classList.remove('active');
+        btnRegister.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

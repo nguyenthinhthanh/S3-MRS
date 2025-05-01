@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar d-flex justify-content-between align-items-center">
+    <!-- Trái: menu toggle + title -->
+    <div class="d-flex align-items-center">
+      <button id="menuToggle" class="btn btn-link text-dark me-2">
+        <i class="fas fa-bars fa-lg"></i>
+      </button>
+      <span class="fw-bold fs-5 text-primary">S3 - MRS</span>
+    </div>
+
+    <!-- Giữa: search -->
+    <div class="search-container d-flex justify-content-center flex-grow-1">
+      <input type="text" class="search-input" placeholder="Search for anything..." />
+    </div>
+
+    <!-- Phải: avatar + dropdown -->
+    <div class="dropdown ms-3">
+      <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        <div class="me-2 text-end">
+          <div class="fw-semibold">{{ session['user']['username'] }}</div>
+          <small class="text-muted text-capitalize">{{ session['user']['role'] }}</small>
+        </div>
+        <img src="https://i.pravatar.cc/100?img=47" alt="Avatar" class="rounded-circle" width="36" height="36">
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+        <li><a class="dropdown-item" href="/account">Your Account</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+
+  
+
+  <!-- Sidebar -->
+  <div class="sidebar active" id="sidebar">
+    <nav class="nav flex-column mt-4">
+      <a href="home" class="nav-link"><i class="fas fa-home me-2"></i> Home</a>
+      <a href="reservations" class="nav-link"><i class="fas fa-calendar-alt me-2"></i> Reservations</a>
+      <a href="check-in" class="nav-link"><i class="fas fa-door-open me-2"></i> Check in & out</a>
+      <a href="device-management" class="nav-link"><i class="fas fa-server me-2"></i> Device Management</a>
+      <a href="notifications" class="nav-link"><i class="fas fa-bell me-2"></i> Notifications</a>
+      <a href="settings" class="nav-link"><i class="fas fa-cog me-2"></i> Settings</a>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content shifted" id="mainContent">
+    <div class="container-fluid pt-4">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById("menuToggle");
+    const sidebar = document.getElementById("sidebar");
+    const content = document.getElementById("mainContent");
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("active");
+      content.classList.toggle("shifted");
+    });
+  </script>
+  <!-- Bootstrap JS (cho dropdown) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
