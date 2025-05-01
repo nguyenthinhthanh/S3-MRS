@@ -67,20 +67,20 @@ def register():
 
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot_password():
-    if request.method == 'POST':
-        username = request.form['username']
-        new_pass = request.form['new_password']
-        confirm = request.form['confirm_password']
-        if username not in USERS:
-            flash('Username does not exist', 'error')
-        elif not new_pass:
-            flash('Password cannot be empty', 'error')
-        elif new_pass != confirm:
-            flash('Passwords do not match', 'error')
-        else:
-            USERS[username] = new_pass
-            flash('Password updated! Please log in.', 'success')
-            return redirect(url_for('login'))
+    # if request.method == 'POST':
+    #     username = request.form['username']
+    #     new_pass = request.form['new_password']
+    #     confirm = request.form['confirm_password']
+    #     if username not in USERS:
+    #         flash('Username does not exist', 'error')
+    #     elif not new_pass:
+    #         flash('Password cannot be empty', 'error')
+    #     elif new_pass != confirm:
+    #         flash('Passwords do not match', 'error')
+    #     else:
+    #         USERS[username] = new_pass
+    #         flash('Password updated! Please log in.', 'success')
+    #         return redirect(url_for('login'))
     return render_template('forgot.html')
 
 @app.route('/')
@@ -196,6 +196,8 @@ def settings():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('settings.html')
-
+@app.route('/base')
+def base():
+    return render_template('forgot.html')
 if __name__ == "__main__":
     app.run(debug=True)
