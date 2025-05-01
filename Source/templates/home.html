@@ -1,105 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - S3-MRS</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-  <script src="https://unpkg.com/feather-icons"></script>
-</head>
-<body class="dashboard">
-  <aside class="sidebar">
-    <div class="logo">S3 - MRS</div>
-    <nav>
-      <ul>
-        <li><a href="/home"><i data-feather="home"></i> Home</a></li>
-        <li><a href="/reservations"><i data-feather="list"></i> Reservations</a></li>
-        <li><a href="/checkin-out"><i data-feather="check-square"></i> Check in & out</a></li>
-        <li><a href="/devices"><i data-feather="monitor"></i> Device management</a></li>
-        <li><a href="/notifications"><i data-feather="bell"></i> Notifications</a></li>
-        <li><a href="/settings"><i data-feather="settings"></i> Settings</a></li>
-      </ul>
-    </nav>
-    <div class="reminder">
-      <h4>REMINDER</h4>
-      <ul>
-        {% for sp in reservations %}
-          {% if sp.status == 'reserved' and sp.reserved_until %}
-          <li>
-            <span class="dot green"></span>
-            {{ sp.name }} at {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}
-          </li>
-          {% endif %}
-        {% endfor %}
-        {% if reservations|selectattr('status','equalto','reserved')|list|length == 0 %}
-          <li>No upcoming reservations</li>
+{% extends "base.html" %}
+
+{% block title %}Home - S3-MRS{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{% endblock %}
+
+{% block content %}
+  <h2>Reservations</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Quiet Study Room</h3>
+      <p>Single desk with basic devices</p>
+      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+    </div>
+    <div class="card">
+      <h3>Open Study Area</h3>
+      <p>Open space with shared tables</p>
+      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+    </div>
+    <div class="card">
+      <h3>Group Room</h3>
+      <p>Medium-size room with white table</p>
+      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+    </div>
+  </div>
+  <h3>My Reservations</h3>
+  <section class="my-reservations">
+    <div class="cards">
+      {% for sp in reservations %}
+      <div class="card">
+        <h3>{{ sp.name }}</h3>
+        <p>{{ sp.type }}</p>
+        {% if sp.status in ['reserved', 'occupied'] %}
+        <small>
+          {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}
+          <span class="status {{ sp.status }}">{{ sp.status.title() }}</span>
+          {% if sp.location %}in {{ sp.location }}{% endif %}
+        </small>
         {% endif %}
-      </ul>
-    </div>
-  </aside>
-  <header class="topbar">
-    <div class="search">
-      <input type="text" placeholder="Search for anything...">
-      <i data-feather="search"></i>
-    </div>
-    <div class="top-right">
-      <span>Hello, {{ user }}</span>
-      <a href="/logout" class="btn-logout">Logout</a>
-    </div>
-  </header>
-  <main class="content">
-    <section class="reservations">
-      <h2>Reservations</h2>
-      <div class="cards">
-        <div class="card">
-          <h3>Quiet Study Room</h3>
-          <p>Single desk with basic devices</p>
-          <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
-        </div>
-        <div class="card">
-          <h3>Open Study Area</h3>
-          <p>Open space with shared tables</p>
-          <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
-        </div>
-        <div class="card">
-          <h3>Group Room</h3>
-          <p>Medium-size room with white table</p>
-          <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+        <div class="action-buttons" style="display: flex; gap: 10px;">
+            <button class="btn-primary-register" onclick="location.href='/reservations'">Change</button>
+        
+            {% if sp.status in ['reserved', 'occupied'] %}
+            <form method="POST" action="/reservations" style="margin: 0; display: inline-block;">
+                <input type="hidden" name="space_id" value="{{ sp.id }}">
+                <button type="submit" name="action" value="checkout" class="btn-secondary cancel-btn" style="width: 100%;">Cancel</button>
+            </form>
+            {% endif %}
         </div>
       </div>
-      <h3>My Reservations</h3>
-      <section class="my-reservations">
-        <div class="cards">
-          {% for sp in reservations %}
-          <div class="card">
-            <h3>{{ sp.name }}</h3>
-            <p>{{ sp.type }}</p>
-            {% if sp.status in ['reserved', 'occupied'] %}
-            <small>
-              {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}
-              <span class="status {{ sp.status }}">{{ sp.status.title() }}</span>
-              {% if sp.location %}in {{ sp.location }}{% endif %}
-            </small>
-            {% endif %}
-            <div class="action-buttons" style="display: flex; gap: 10px;">
-                <button class="btn-primary-register" onclick="location.href='/reservations'">Change</button>
-            
-                {% if sp.status in ['reserved', 'occupied'] %}
-                <form method="POST" action="/reservations" style="margin: 0; display: inline-block;">
-                    <input type="hidden" name="space_id" value="{{ sp.id }}">
-                    <button type="submit" name="action" value="checkout" class="btn-secondary cancel-btn" style="width: 100%;">Cancel</button>
-                </form>
-                {% endif %}
-            </div>
-          </div>
-          {% endfor %}
-          {% if reservations|length == 0 %}
-          <p>No reservations yet. <a href="/reservations">Make one now!</a></p>
-          {% endif %}
-        </div>
-      </section>
-    </section>
-  </main>
-  <script>feather.replace()</script>
-</body>
-</html>
+      {% endfor %}
+      {% if reservations|length == 0 %}
+      <p>No reservations yet. <a href="/reservations">Make one now!</a></p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}
