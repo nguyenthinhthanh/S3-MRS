@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% include 'partials/head.html' %}
+<body class="dashboard">
+  {% include 'partials/sidebar.html' %}
+  {% include 'partials/topbar.html' %}
+  <main class="content">
+    <h2>My Reservations</h2>
+    <div class="my-reservations">
+      {% for sp in reservations %}
+      <div class="reservation-item">
+        <div class="info">
+          <h4>{{ sp.reserved_until | datetimeformat }} <span class="status confirmed">Confirmed</span></h4>
+          <img src="/static/images/room{{ sp.id }}.jpg" alt="{{ sp.name }}">
+          <div>
+            <p><strong>{{ sp.name }}</strong><br>{{ sp.type }}<br>Booking ref. #: {{ sp.id }}000</p>
+          </div>
+        </div>
+        <div class="actions">
+          <div onclick="location.href='/reservations'"><i data-feather="map-pin"></i><p>Directions</p></div>
+          <div onclick="location.href='/reservations'"><i data-feather="calendar"></i><p>Reschedule</p></div>
+          <div onclick="location.href='/reservations'"><i data-feather="x"></i><p>Cancel</p></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+  <script>feather.replace()</script>
+</body>
+</html>

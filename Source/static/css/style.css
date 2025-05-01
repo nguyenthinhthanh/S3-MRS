@@ -114,6 +114,28 @@
   margin-top: 20px;
 }
 
+/* --- TÙY CHỈNH GRID CHO RESERVATION CARDS --- */
+.cards {
+  display: flex;
+  flex-wrap: wrap;        /* cho phép xuống hàng */
+  gap: 20px;              /* khoảng cách giữa các card */
+}
+.card {
+  flex: 1 1 calc(33% - 20px);  /* mỗi card chiếm ~1/3 chiều ngang */
+  max-width: calc(33% - 20px);
+}
+
+/* --- TÙY CHỈNH KHOẢNG CÁCH CHO RESERVATION CARD --- */
+.card form button {
+  margin-top: 15px;  /* Đẩy nút Reserve / Check-In / Check-Out ra xa input */
+  margin-bottom: 10px; /* Khoảng cách tới dòng small */
+}
+.card small {
+  display: block;
+  margin-top: 12px; /* Đẩy dòng status xuống để tạo khoảng trắng */
+}
+
+
 
 /* Reset & base */
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -145,6 +167,7 @@ body.dashboard { display: flex; font-family: Arial, sans-serif; height: 100vh; }
 .reminder .green { background: #2ecc71; }
 .reminder .orange { background: #f39c12; }
 
+/* Dash board */
 /* Topbar */
 .topbar {
   position: fixed;

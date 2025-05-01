@@ -14,8 +14,20 @@ spaces = [
      "status": "available", "reserved_until": None},
     {"id": 2, "name": "Cubicle B202", "type": "Individual Study",
      "equipment": ["Power Outlet", "Lamp"],
+     "status": "available", "reserved_until": None},
+    {"id": 3, "name": "Room C303", "type": "Group Study",
+     "equipment": ["Whiteboard", "Conference Phone"],
+     "status": "available", "reserved_until": None},
+    {"id": 4, "name": "Cubicle D404", "type": "Individual Study",
+     "equipment": ["Power Outlet", "Monitor"],
+     "status": "available", "reserved_until": None},
+    {"id": 5, "name": "Room E505", "type": "Group Study",
+     "equipment": ["Interactive Screen", "AC"],
+     "status": "available", "reserved_until": None},
+    {"id": 6, "name": "Cubicle F606", "type": "Individual Study",
+     "equipment": ["Power Outlet", "Desk Lamp"],
      "status": "occupied",
-     "reserved_until": (datetime.now() + timedelta(hours=1)).isoformat()}
+     "reserved_until": (datetime.now() + timedelta(hours=2)).isoformat()}
 ]
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -120,12 +132,45 @@ def register_page():
 
 @app.route('/home')
 def home():
-    return redirect(url_for('index'))
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    # Lấy những phòng user đã đặt (status != 'available')
+    my_reservations = [sp for sp in spaces if sp['status'] in ('reserved','occupied')]
+    return render_template('home.html', reservations=my_reservations, user=session['user'])
 
-@app.route('/reservations')
+@app.route('/reservations', methods=['GET', 'POST'])
 def reservations_page():
     if 'user' not in session:
         return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        action = request.form.get('action')  # 'reserve', 'checkin', 'checkout'
+        space_id = int(request.form['space_id'])
+        for sp in spaces:
+            if sp['id'] == space_id:
+                if action == 'reserve' and sp['status'] == 'available':
+                    # Lấy thời gian và địa điểm từ form
+                    dt_str = request.form.get('datetime')  # định dạng 'YYYY-MM-DDTHH:MM'
+                    equipment = request.form.get('equipment')
+                    reserved_dt = datetime.fromisoformat(dt_str)
+                    sp['status'] = 'reserved'
+                    sp['reserved_until'] = reserved_dt.isoformat()
+                    sp['equipment'] = equipment
+                    flash(f"Reserved {sp['name']} at {reserved_dt.strftime('%Y-%m-%d %H:%M')} in {equipment}", 'success')
+                elif action == 'checkin' and sp['status'] == 'reserved':
+                    sp['status'] = 'occupied'
+                    flash(f"Checked in to {sp['name']}", 'success')
+                elif action == 'checkout' and sp['status'] in ('reserved','occupied'):
+                    sp['status'] = 'available'
+                    sp['reserved_until'] = None
+                    # sp.pop('equipment', None)
+                    flash(f"Checked out from {sp['name']}", 'success')
+                else:
+                    flash('Invalid action or wrong state', 'error')
+                break
+        return redirect(url_for('reservations_page'))
+
+    # DS các không gian có thể đặt: lấy từ spaces
     return render_template('reservations.html', spaces=spaces)
 
 @app.route('/checkin-out')
