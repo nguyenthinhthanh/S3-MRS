@@ -155,15 +155,16 @@ def reservations_page():
                     reserved_dt = datetime.fromisoformat(dt_str)
                     sp['status'] = 'reserved'
                     sp['reserved_until'] = reserved_dt.isoformat()
-                    sp['equipment'] = equipment
+                    # sp['equipment'] = equipment
                     flash(f"Reserved {sp['name']} at {reserved_dt.strftime('%Y-%m-%d %H:%M')} in {equipment}", 'success')
                 elif action == 'checkin' and sp['status'] == 'reserved':
                     sp['status'] = 'occupied'
                     flash(f"Checked in to {sp['name']}", 'success')
                 elif action == 'checkout' and sp['status'] in ('reserved','occupied'):
                     sp['status'] = 'available'
+                    # equipment = request.form.get('equipment')
                     sp['reserved_until'] = None
-                    # sp.pop('equipment', None)
+                    # sp['equipment'] = equipment
                     flash(f"Checked out from {sp['name']}", 'success')
                 else:
                     flash('Invalid action or wrong state', 'error')
