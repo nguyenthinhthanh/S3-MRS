@@ -114,5 +114,43 @@ def checkout_space():
             return jsonify({"success": True, "space": sp})
     return jsonify({"success": False, "message": "Space not found"}), 404
 
+# Page routes
+def register_page():
+    pass
+
+@app.route('/home')
+def home():
+    return redirect(url_for('index'))
+
+@app.route('/reservations')
+def reservations_page():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('reservations.html', spaces=spaces)
+
+@app.route('/checkin-out')
+def checkin_out():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('checkin.html')
+
+@app.route('/devices')
+def devices():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('devices.html')
+
+@app.route('/notifications')
+def notifications():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('notifications.html')
+
+@app.route('/settings')
+def settings():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template('settings.html')
+
 if __name__ == "__main__":
     app.run(debug=True)
