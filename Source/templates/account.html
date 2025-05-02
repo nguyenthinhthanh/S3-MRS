@@ -20,7 +20,7 @@
           {% for sp in reservations_history %}
           <li>
             <span>{{ sp.reserved_from.replace('T',' ') }} - {{ sp.reserved_until.replace('T',' ') }}</span>
-            <strong>{{ sp.name }}</strong> in {{ sp.location }}
+            <strong>{{ sp.name }}</strong>
           </li>
           {% endfor %}
         </ul>
