@@ -57,24 +57,32 @@
         </form>
 
         <!-- Register Form -->
-        <form id="formRegister" style="display: none;">
+        <form id="formRegister" method="POST" action="{{ url_for('register') }}" style="display: none;">
           <div class="mb-3">
             <label for="regUsername" class="form-label">User name</label>
-            <input type="text" class="form-control" id="regUsername" placeholder="Choose a username" />
+            <input type="text" class="form-control" id="regUsername" name="username"
+                  placeholder="Choose a username" required />
           </div>
 
           <div class="mb-3">
             <label for="regEmail" class="form-label">Email</label>
             <input type="email" class="form-control" id="regEmail" placeholder="Enter your email" />
-          </div>
 
           <div class="mb-3">
             <label for="regPassword" class="form-label">Password</label>
-            <input type="password" class="form-control" id="regPassword" placeholder="Create a password" />
+            <input type="password" class="form-control" id="regPassword" name="password"
+                  placeholder="Create a password" required />
+          </div>
+
+          <div class="mb-3">
+            <label for="regConfirm" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="regConfirm" name="confirm"
+                  placeholder="Confirm your password" required />
           </div>
 
           <button type="submit" class="btn btn-submit w-100">Register</button>
         </form>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}

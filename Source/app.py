@@ -63,23 +63,29 @@ def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
-@app.route('/register', methods=['GET', 'POST'])
+# Register and Forgot Password
+@app.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm = request.form['confirm']
-        if not username or not password:
-            flash('Username and password required', 'error')
-        elif password != confirm:
-            flash('Passwords do not match', 'error')
-        elif username in USERS:
-            flash('Username already exists', 'error')
-        else:
-            USERS[username] = password
-            flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('login'))
-    return render_template('register.html')
+    global USERS
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '')
+    confirm = request.form.get('confirm', '')
+
+    # Kiểm tra đầu vào
+    if not username or not password or not confirm:
+        flash('Username, password và confirm đều bắt buộc', 'danger')
+    elif password != confirm:
+        flash('Passwords do not match', 'danger')
+    elif username in USERS:
+        flash('Username already exists', 'danger')
+    else:
+        USERS[username] = password
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('login'))
+
+    # Nếu lỗi, render lại login.html với tab Register mở
+    return render_template('login.html', show_register=True)
+
 
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot_password():
