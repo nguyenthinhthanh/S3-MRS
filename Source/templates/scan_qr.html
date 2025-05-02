@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Check In - QR{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/scan_qr.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h2 class="page-title">Check In</h2>
+<!-- QR Scan View -->
+<div id="scanView" class="scan-wrapper">
+  <div class="qr-area">
+    <div id="reader" class="qr-box-wrapper">
+      <div class="qr-box-overlay"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Personal QR View -->
+<div id="personalView" class="scan-wrapper" style="display: none;">
+  <!-- <p class="text-muted mb-3">Your personal QR code:</p> -->
+  <div id="userQrCode" class="qr-box-wrapper"></div>
+</div>
+<div class="mode-switch">
+    <button id="btnScan" class="mode-btn active">Scan QR</button>
+    <button id="btnPersonal" class="mode-btn">QR Cá nhân</button>
+  </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Hide sidebar
+  document.getElementById("sidebar")?.classList.remove("active");
+  document.getElementById("mainContent")?.classList.remove("shifted");
+
+  const scanBtn = document.getElementById("btnScan");
+  const personalBtn = document.getElementById("btnPersonal");
+  const scanView = document.getElementById("scanView");
+  const personalView = document.getElementById("personalView");
+  const userQrCode = document.getElementById("userQrCode");
+
+  // QR Scanner
+  const qrScanner = new Html5Qrcode("reader");
+  qrScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    decoded => {
+      qrScanner.stop();
+      window.location.href = decoded;
+    },
+    error => {}
+  ).catch(err => console.error("Camera error:", err));
+
+  // Toggle View
+  scanBtn.addEventListener("click", () => {
+    scanBtn.classList.add("active");
+    personalBtn.classList.remove("active");
+    scanView.style.display = "block";
+    personalView.style.display = "none";
+  });
+
+  personalBtn.addEventListener("click", () => {
+  personalBtn.classList.add("active");
+  scanBtn.classList.remove("active");
+  scanView.style.display = "none";
+  personalView.style.display = "block";
+
+  // Render QR code từ tên người dùng
+  const username = "{{ session['user'] }}";
+  const qrContent = "/check-in/validate-qr?user=" + encodeURIComponent(username);
+  userQrCode.innerHTML = ""; // clear QR cũ nếu có
+  new QRCode(userQrCode, {
+    text: qrContent,
+    width: 240,
+    height: 240,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+});
+
+</script>
+{% endblock %}
