@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Your Account - S3-MRS{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/account.css') }}">
+{% endblock %}
+
+{% block content %}
+  <section class="account-details">
+    <h2>Account Information</h2>
+    <div class="detail-card">
+      <p><strong>Username:</strong> {{ user }}</p>
+    </div>
+
+    <h2>Reservation History</h2>
+    <div class="my-reservations">
+      {% if reservations_history %}
+        <ul class="history-list">
+          {% for sp in reservations_history %}
+          <li>
+            <span>{{ sp.reserved_from.replace('T',' ') }} - {{ sp.reserved_until.replace('T',' ') }}</span>
+            <strong>{{ sp.name }}</strong> in {{ sp.location }}
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No past reservations.</p>
+      {% endif %}
+    </div>
+  </section>
+{% endblock %}

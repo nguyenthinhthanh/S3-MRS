@@ -83,6 +83,15 @@ def forgot_password():
     #         return redirect(url_for('login'))
     return render_template('forgot.html')
 
+# User account page
+@app.route('/account')
+def account():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    # Lịch sử mọi reservation (đã checkout)
+    history = [sp for sp in spaces if sp.get('reserved_from')]
+    return render_template('account.html', user=session['user'], reservations_history=history)
+
 @app.route('/')
 def index():
     if 'user' not in session:
