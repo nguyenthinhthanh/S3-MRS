@@ -29,7 +29,23 @@ spaces = [
      "status": "occupied", "reserved_from": None,
      "reserved_until": (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat()}
 ]
-
+now = datetime.now()
+RESERVATIONS = {
+    1: [
+        {
+            "username": "student1",
+            "start": (now - timedelta(minutes=10)).isoformat(),
+            "end": (now + timedelta(minutes=30)).isoformat()
+        }
+    ],
+    2: [
+        {
+            "username": "admin",
+            "start": (now + timedelta(hours=1)).isoformat(),
+            "end": (now + timedelta(hours=2)).isoformat()
+        }
+    ]
+}
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -206,8 +222,38 @@ def settings():
     if 'user' not in session:
         return redirect(url_for('login'))
     return render_template('settings.html')
-@app.route('/base')
-def base():
-    return render_template('forgot.html')
+
+@app.route('/check-in')
+def scan_qr():
+    return render_template('scan_qr.html')
+
+@app.route('/check-in/validate-qr')
+def validate_qr():
+    try:
+        room_id = int(request.args.get("room", ""))
+    except ValueError:
+        flash("Invalid room ID.", "error")
+        return redirect("/check-in")
+
+    user = session.get('user')
+    if not user:
+        flash("User not logged in.", "error")
+        return redirect("/check-in")
+
+    now = datetime.now()
+    reservations = RESERVATIONS.get(room_id, [])
+
+    match = next((
+        r for r in reservations
+        if r["username"] == user and
+           datetime.fromisoformat(r["start"]) <= now <= datetime.fromisoformat(r["end"])
+    ), None)
+
+    if match:
+        flash(f"Check-in successful for room {room_id}.", "success")
+        return render_template('checkin.html')
+    else:
+        flash("No valid reservation found or invalid time.", "error")
+        return redirect("/check-in")
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
