@@ -84,7 +84,7 @@ def register():
         return redirect(url_for('login'))
 
     # Nếu lỗi, render lại login.html với tab Register mở
-    return render_template('login.html', show_register=True)
+    return redirect(url_for('login'))
 
 
 @app.route('/forgot', methods=['GET', 'POST'])
