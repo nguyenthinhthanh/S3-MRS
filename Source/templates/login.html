@@ -27,7 +27,13 @@
           <button id="btnLogin" class="switch-btn active" onclick="showForm('login')">Login</button>
           <button id="btnRegister" class="switch-btn" onclick="showForm('register')">Register</button>
         </div>
-        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} mt-3 text-center">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
         <p class="text-center text-muted mb-4" style="font-size: 14px;">
           Smart Study Space Management and Reservation System at HCMUT
@@ -82,14 +88,6 @@
 
           <button type="submit" class="btn btn-submit w-100">Register</button>
         </form>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} mt-3 text-center">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
       </div>
     </div>
   </div>
