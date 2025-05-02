@@ -14,9 +14,11 @@ html, body {
 }
 
 .left-img img {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
+  width: 100%;         /* Đảm bảo ảnh co dãn theo chiều ngang */
+  height: auto;        /* Giữ tỷ lệ chiều cao */
+  object-fit: contain; /* Giữ toàn bộ ảnh, không cắt */
+  display: block;      /* Xóa khoảng trắng dưới ảnh nếu có */
+  margin: 0 auto;      /* Căn giữa nếu cần */
 }
 
 .right-form {
