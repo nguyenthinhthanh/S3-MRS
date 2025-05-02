@@ -10,21 +10,56 @@
   <h2>Reservations</h2>
   <div class="cards">
     <div class="card">
+      <!-- 1. Phần ảnh -->
+      <!-- 2. Phần nội dung -->
       <h3>Quiet Study Room</h3>
+      <img 
+        src="{{ url_for('static', filename='images/quiet.jpg') }}" 
+        alt="Quiet Study Room" 
+        class="card-img"
+      >
       <p>Single desk with basic devices</p>
-      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+      <button 
+        class="btn-primary-register" 
+        onclick="location.href='/reservations'"
+      >
+        Reserve
+      </button>
     </div>
+
     <div class="card">
       <h3>Open Study Area</h3>
+      <img 
+        src="{{ url_for('static', filename='images/open.jpg') }}" 
+        alt="Open Study Area" 
+        class="card-img"
+      >
       <p>Open space with shared tables</p>
-      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+      <button 
+        class="btn-primary-register" 
+        onclick="location.href='/reservations'"
+      >
+        Reserve
+      </button>
     </div>
+
     <div class="card">
       <h3>Group Room</h3>
+      <img 
+        src="{{ url_for('static', filename='images/group.jpg') }}" 
+        alt="Group Room" 
+        class="card-img"
+      >
       <p>Medium-size room with white table</p>
-      <button class="btn-primary-register" onclick="location.href='/reservations'">Reserve</button>
+      <button 
+        class="btn-primary-register" 
+        onclick="location.href='/reservations'"
+      >
+        Reserve
+      </button>
     </div>
   </div>
+
   <h3>My Reservations</h3>
   <section class="my-reservations">
     <div class="cards">
@@ -34,9 +69,12 @@
         <p>{{ sp.type }}</p>
         {% if sp.status in ['reserved', 'occupied'] %}
         <small>
-          {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}
+          Status: {{ sp.status }}
+          {% if sp.reserved_from %} from {{ sp.reserved_from.split('T')[0] }} {{ sp.reserved_from.split('T')[1] }}{% endif %}
+          {% if sp.reserved_until %} util {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}{% endif %}
+          {% if sp.equipment %} with {{ sp.equipment }}{% endif %}
           <span class="status {{ sp.status }}">{{ sp.status.title() }}</span>
-          {% if sp.location %}in {{ sp.location }}{% endif %}
+          <!-- {% if sp.location %}in {{ sp.location }}{% endif %} -->
         </small>
         {% endif %}
         <div class="action-buttons" style="display: flex; gap: 10px;">

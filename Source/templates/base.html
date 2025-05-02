@@ -43,8 +43,6 @@
     </div>
   </div>
 
-  
-
   <!-- Sidebar -->
   <div class="sidebar active" id="sidebar">
     <nav class="nav flex-column mt-4">
@@ -55,7 +53,36 @@
       <a href="notifications" class="nav-link"><i class="fas fa-bell me-2"></i> Notifications</a>
       <a href="settings" class="nav-link"><i class="fas fa-cog me-2"></i> Settings</a>
     </nav>
+    
+    {# Chỉ hiển thị nếu biến reservations được truyền vào template #}
+    {% if reservations is defined %}
+    <div class="reminder mt-4 p-3 bg-white rounded shadow-sm">
+      <h5 class="mb-2">REMINDER</h5>
+      <ul class="list-unstyled mb-0">
+        {% set upcoming = reservations 
+            | selectattr('status','equalto','reserved') 
+            | selectattr('reserved_until') 
+            | list %}
+        {% if upcoming %}
+          {% for sp in upcoming %}
+            <li class="d-flex align-items-center mb-2">
+              <span class="dot green me-2"></span>
+              <small>
+                {{ sp.name }} at
+                {{ sp.reserved_from.split('T')[0] }}
+                {{ sp.reserved_from.split('T')[1].split('.')[0] }}
+              </small>
+            </li>
+          {% endfor %}
+        {% else %}
+          <li><small>No upcoming reservations</small></li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+
   </div>
+
 
   <!-- Main Content -->
   <div class="main-content shifted" id="mainContent">

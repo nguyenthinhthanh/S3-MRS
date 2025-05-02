@@ -88,3 +88,18 @@ body {
 .main-content.shifted {
     margin-left: 240px;
 }
+
+/* Định nghĩa chung cho dot */
+.dot {
+  display: inline-block;      /* bắt buộc để width/height có tác dụng */
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  background-color: transparent;  /* mặc định không màu */
+}
+
+/* Nếu có class green thì override background */
+.dot.green {
+  background-color: #28a745;  /* màu xanh lá */
+}

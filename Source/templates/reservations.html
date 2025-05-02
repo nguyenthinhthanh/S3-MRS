@@ -17,10 +17,17 @@
         <form method="POST">
           <input type="hidden" name="space_id" value="{{ sp.id }}">
           {% if sp.status == 'available' %}
-            <label>Date & Time:
-              <input type="datetime-local" name="datetime" required>
-            </label>
-            <label>Equipment:
+            <div class="form-group">
+              <label class="form-label" for="start_datetime">Start:</label>
+              <input class="form-input" type="datetime-local" name="start_datetime" id="start_datetime" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="end_datetime">End:</label>
+              <input class="form-input" type="datetime-local" name="end_datetime" id="end_datetime" required>
+            </div>
+            <label class="equipment-label">
+              Equipment:
               <select name="equipment" required>
                 {% for eq in sp.equipment %}
                 <option value="{{ eq }}">{{ eq }}</option>
@@ -29,14 +36,16 @@
             </label>
             <button type="submit" name="action" value="reserve" class="btn-primary-register">Reserve</button>
           {% elif sp.status == 'reserved' %}
-            <button type="submit" name="action" value="checkin" class="btn-secondary-register">Check-In</button>
+            <button type="submit" name="action" value="checkin" class="btn-primary-register">Check-In</button>
+            <button type="submit" name="action" value="checkout" class="btn-secondary cancel-btn">Cancel</button>
           {% elif sp.status == 'occupied' %}
             <button type="submit" name="action" value="checkout" class="btn-secondary-register">Check-Out</button>
           {% endif %}
         </form>
         <small>
           Status: {{ sp.status }}
-          {% if sp.reserved_until %} at {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}{% endif %}
+          {% if sp.reserved_from %} from {{ sp.reserved_from.split('T')[0] }} {{ sp.reserved_from.split('T')[1] }}{% endif %}
+          {% if sp.reserved_until %} util {{ sp.reserved_until.split('T')[0] }} {{ sp.reserved_until.split('T')[1] }}{% endif %}
           {% if sp.equipment %} with {{ sp.equipment }}{% endif %}
         </small>
       </div>

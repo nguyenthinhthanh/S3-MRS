@@ -11,23 +11,23 @@ USERS = {'student1': 'password123'}
 spaces = [
     {"id": 1, "name": "Room A101", "type": "Group Study",
      "equipment": ["Whiteboard", "Projector", "AC"],
-     "status": "available", "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None},
     {"id": 2, "name": "Cubicle B202", "type": "Individual Study",
      "equipment": ["Power Outlet", "Lamp"],
-     "status": "available", "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None},
     {"id": 3, "name": "Room C303", "type": "Group Study",
      "equipment": ["Whiteboard", "Conference Phone"],
-     "status": "available", "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None},
     {"id": 4, "name": "Cubicle D404", "type": "Individual Study",
      "equipment": ["Power Outlet", "Monitor"],
-     "status": "available", "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None},
     {"id": 5, "name": "Room E505", "type": "Group Study",
      "equipment": ["Interactive Screen", "AC"],
-     "status": "available", "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None},
     {"id": 6, "name": "Cubicle F606", "type": "Individual Study",
      "equipment": ["Power Outlet", "Desk Lamp"],
-     "status": "occupied",
-     "reserved_until": (datetime.now() + timedelta(hours=2)).isoformat()}
+     "status": "occupied", "reserved_from": None,
+     "reserved_until": (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat()}
 ]
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -149,29 +149,29 @@ def reservations_page():
         for sp in spaces:
             if sp['id'] == space_id:
                 if action == 'reserve' and sp['status'] == 'available':
-                    # Lấy thời gian và địa điểm từ form
-                    dt_str = request.form.get('datetime')  # định dạng 'YYYY-MM-DDTHH:MM'
-                    equipment = request.form.get('equipment')
-                    reserved_dt = datetime.fromisoformat(dt_str)
+                    # nhận start and end
+                    start_str = request.form.get('start_datetime')
+                    end_str = request.form.get('end_datetime')
+                    location = request.form.get('location')
+                    sp['reserved_from'] = datetime.fromisoformat(start_str).isoformat()
+                    sp['reserved_until'] = datetime.fromisoformat(end_str).isoformat()
+                    sp['location'] = location
                     sp['status'] = 'reserved'
-                    sp['reserved_until'] = reserved_dt.isoformat()
-                    # sp['equipment'] = equipment
-                    flash(f"Reserved {sp['name']} at {reserved_dt.strftime('%Y-%m-%d %H:%M')} in {equipment}", 'success')
+                    flash(f"Reserved {sp['name']} from {start_str.replace('T',' ')} to {end_str.replace('T',' ')} at {location}", 'success')
                 elif action == 'checkin' and sp['status'] == 'reserved':
                     sp['status'] = 'occupied'
                     flash(f"Checked in to {sp['name']}", 'success')
                 elif action == 'checkout' and sp['status'] in ('reserved','occupied'):
                     sp['status'] = 'available'
-                    # equipment = request.form.get('equipment')
+                    sp['reserved_from'] = None
                     sp['reserved_until'] = None
-                    # sp['equipment'] = equipment
-                    flash(f"Checked out from {sp['name']}", 'success')
+                    sp['location'] = None
+                    flash(f"Cancelled reservation for {sp['name']}", 'success')
                 else:
                     flash('Invalid action or wrong state', 'error')
                 break
         return redirect(url_for('reservations_page'))
 
-    # DS các không gian có thể đặt: lấy từ spaces
     return render_template('reservations.html', spaces=spaces)
 
 @app.route('/checkin-out')

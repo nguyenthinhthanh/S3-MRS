@@ -30,17 +30,30 @@
     display: block;
     margin-top: 12px;
   }
+
+  /* --- Giữa 2 input start, end --- */
+  .card form label {
+    display: block;
+    margin-bottom: 10px;
+  }
   
   /* --- Nút hành động --- */
-  .btn-primary-register {
-    background: linear-gradient(90deg, #6b4eff, #9b54ff);
-    color: #fff;
+  .btn-secondary-register, .btn-primary-register {
+    width: 48%;
     padding: 12px;
     border-radius: 30px;
     border: none;
-    font-size: 16px;
     cursor: pointer;
-    width: 100%;
+    font-size: 16px;
+  }
+  .btn-primary-register {
+    background: linear-gradient(90deg, #6b4eff, #9b54ff);
+    margin-top: 10px;
+    color: #fff;
+  }
+  .btn-secondary-register {
+    background: rgba(107, 78, 255, 0.2);
+    color: #6b4eff;
   }
   
   .cancel-btn {
@@ -51,7 +64,23 @@
     padding: 12px;
     font-size: 16px;
     cursor: pointer;
-    width: 100%;
+    width: 50%;
+  }
+
+
+  .form-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .form-label {
+    width: 60px; /* Đặt chiều rộng cố định để căn đều */
+    margin-right: 0px;
+  }
+
+  .form-input {
+    flex: 1;
   }
   
   /* --- Button layout --- */
@@ -60,6 +89,12 @@
     gap: 10px;
     align-items: center;
     margin-top: 15px;
+  }
+
+  /* --- Laybel equiment --- */
+  .equipment-label {
+    display: block;
+    margin-top: 10px;
   }
   
   /* --- Trạng thái đặt phòng --- */
