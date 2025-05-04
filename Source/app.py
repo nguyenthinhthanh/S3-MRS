@@ -261,5 +261,19 @@ def validate_qr():
     else:
         flash("No valid reservation found or invalid time.", "error")
         return redirect("/check-in")
+
+@app.route("/device-management")
+def device_management():
+    devices = [
+        {"name": "Smart TV 1", "icon": "fa-tv", "on": True, "hours": 3, "usage": 5},
+        {"name": "Light 1", "icon": "fa-lightbulb", "on": False, "hours": 3, "usage": 5},
+        {"name": "Air Conditioner 1", "icon": "fa-snowflake", "on": True, "hours": 3, "usage": 5},
+        {"name": "Light 2", "icon": "fa-lightbulb", "on": True, "hours": 3, "usage": 5},
+        {"name": "Smart TV 2", "icon": "fa-tv", "on": False, "hours": 3, "usage": 5},
+        {"name": "AC 2", "icon": "fa-snowflake", "on": True, "hours": 3, "usage": 5},
+    ]
+    return render_template("devices.html", devices=devices)
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
