@@ -221,7 +221,33 @@ def devices():
 def notifications():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('notifications.html')
+
+    now = datetime.now()
+    history = [sp for sp in spaces if sp.get('reserved_from')]
+    # Tìm các reservation sắp bắt đầu trong 30 phút tới
+    soon = []
+    for sp in history:
+        start = datetime.fromisoformat(sp['reserved_from'])
+        # Nếu start – now <= 30 phút và start > now
+        if 0 < (start - now).total_seconds() <= 1800:
+            soon.append(sp)
+
+    if soon:
+        # Xây dựng message chi tiết
+        details = []
+        for sp in soon:
+            sf = datetime.fromisoformat(sp['reserved_from']).strftime('%Y-%m-%d %H:%M')
+            details.append(f"{sp['name']} at {sf}")
+        # Nối các chi tiết lại thành 1 chuỗi
+        msg = "Sent reminders for: " + "; ".join(details)
+        flash(msg, 'info')
+
+    return render_template(
+        'notifications.html',
+        user=session['user'],
+        reservations_history=history,
+        reminders=soon
+    )
 
 @app.route('/settings')
 def settings():

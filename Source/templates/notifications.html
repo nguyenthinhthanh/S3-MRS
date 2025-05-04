@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - S3-MRS{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
+{% endblock %}
+
+{% block content %}
+  <section class="notifications">
+    <h2 class="mb-4">Upcoming Reservation Reminders</h2>
+    <!-- Flash thông báo đã gửi nhắc nhở -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }} mb-4">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% set upcoming = reservations_history | selectattr('status','equalto','reserved') | list %}
+    {% if upcoming %}
+      <ul class="notification-list">
+        {% for sp in upcoming %}
+        <li class="notification-item d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h5 class="mb-1">{{ sp.name }} <span class="badge bg-success">Reserved</span></h5>
+            <p class="mb-1">From: {{ sp.reserved_from.replace('T',' ') }}<br>To: {{ sp.reserved_until.replace('T',' ') }}</p>
+            <p class="mb-0">Equipment: {{ sp.equipment }}</p>
+          </div>
+          <div class="action-buttons" style="display: flex; gap: 10px;">
+            <button class="btn-primary-register" onclick="location.href='/reservations'">Change</button>
+        
+            {% if sp.status in ['reserved', 'occupied'] %}
+            <form method="POST" action="/reservations" style="margin: 0; display: inline-block;">
+                <input type="hidden" name="space_id" value="{{ sp.id }}">
+                <button type="submit" name="action" value="checkout" class="btn-secondary cancel-btn" style="width: 100%;">Cancel</button>
+            </form>
+            {% endif %}
+        </div>
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No upcoming reminders.</p>
+    {% endif %}
+  </section>
+{% endblock %}
