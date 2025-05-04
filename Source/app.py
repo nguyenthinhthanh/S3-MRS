@@ -242,12 +242,15 @@ def notifications():
         msg = "Sent reminders for: " + "; ".join(details)
         flash(msg, 'info')
 
-    return render_template(
-        'notifications.html',
-        user=session['user'],
-        reservations_history=history,
-        reminders=soon
-    )
+    device_alerts = [
+        {'device_name': 'Projector A101', 'message': 'Malfunction detected', 'timestamp': '2025-05-04 09:30'},
+        {'device_name': 'AC Room C303', 'message': 'Filter needs replacement', 'timestamp': '2025-05-04 08:15'}
+    ]
+    return render_template('notifications.html',
+                            user=session['user'],
+                            reservations_history=history,
+                            device_alerts=device_alerts,
+                            reminders=soon)
 
 @app.route('/settings')
 def settings():
