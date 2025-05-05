@@ -1,5 +1,11 @@
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session, flash
 from datetime import datetime, timedelta
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+from flask import send_file
 
 app = Flask(__name__)
 app.secret_key = 's3mrs_demo_secret'  # dùng cho session
@@ -7,6 +13,11 @@ app.secret_key = 's3mrs_demo_secret'  # dùng cho session
 # Dummy user (hard-coded)
 USERS = {'student1': 'password123'}
 
+# Biến dữ liệu mới để lưu trữ người dùng với tên và vai trò
+user_list = {
+    'user1': 'Student',
+    'user2': 'Teacher'
+}
 # In-memory spaces data
 spaces = [
     {"id": 1, "name": "Room A101", "type": "Group Study",
@@ -256,7 +267,111 @@ def notifications():
 def settings():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('settings.html')
+    return render_template('settings.html', users=user_list, spaces=spaces)
+
+
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    username = request.form['username']
+    role = request.form['role']
+    if username and role and username not in user_list:
+        user_list[username] = role
+        flash(f"Đã thêm người dùng '{username}' với vai trò '{role}'.")
+    else:
+        flash("Không thể thêm người dùng. Có thể tên đã tồn tại hoặc thiếu thông tin.")
+    return redirect(url_for('settings'))
+
+
+@app.route('/edit_user', methods=['POST'])
+def edit_user():
+    old_username = request.form['old_username']
+    new_username = request.form['new_username']
+    new_role = request.form['new_role']
+    if old_username in user_list:
+        del user_list[old_username]
+        user_list[new_username] = new_role
+        flash(f"Đã cập nhật người dùng '{old_username}' thành '{new_username}' với vai trò '{new_role}'.")
+    else:
+        flash("Không tìm thấy người dùng cần sửa.")
+    return redirect(url_for('settings'))
+
+
+
+@app.route('/delete_user', methods=['POST'])
+def delete_user():
+    username = request.form['username']
+    if username in user_list:
+        del user_list[username]
+        flash(f"Đã xóa người dùng '{username}'.")
+    else:
+        flash("Không tìm thấy người dùng để xóa.")
+    return redirect(url_for('settings'))
+
+@app.route('/export_report', methods=['POST'])
+def export_report():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+   
+    report_type = request.form.get('report_type')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    format_type = request.form.get('format')
+
+   
+    try:
+        start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    except Exception as e:
+        flash('Invalid date format', 'error')
+        return redirect(url_for('settings'))
+
+    
+    data = []
+    for space_id, reservations in RESERVATIONS.items():
+        space = next((s for s in spaces if s['id'] == space_id), None)
+        for r in reservations:
+            start_time = datetime.datetime.fromisoformat(r['start'])
+            end_time = datetime.datetime.fromisoformat(r['end'])
+
+           
+            if start <= start_time <= end:
+                data.append({
+                    'username': r['username'],
+                    'space_name': space['name'] if space else f'Room {space_id}',
+                    'start': start_time.strftime('%Y-%m-%d %H:%M'),
+                    'end': end_time.strftime('%Y-%m-%d %H:%M')
+                })
+
+   
+    if format_type == 'pdf':
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(50, height - 50, "Study Space Usage Report")
+
+        
+        pdf.setFont("Helvetica", 12)
+        pdf.drawString(50, height - 80, f"Report Type: {report_type}")
+        pdf.drawString(50, height - 100, f"From {start_date} to {end_date}")
+
+       
+        y = height - 140
+        for entry in data:
+            if y < 100:
+                pdf.showPage()
+                y = height - 50
+            pdf.drawString(50, y, f"{entry['username']} | {entry['space_name']} | {entry['start']} - {entry['end']}")
+            y -= 20
+
+        pdf.save()
+        buffer.seek(0)
+        return send_file(buffer, as_attachment=True, download_name="report.pdf", mimetype='application/pdf')
+
+    return redirect(url_for('settings'))
 
 @app.route('/check-in')
 def scan_qr():
