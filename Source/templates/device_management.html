@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Device Management{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/device_management.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="device-mgmt-container">
+  <h2 class="page-title">Device Management</h2>
+
+  <div class="table-responsive">
+    <table class="room-table">
+      <thead>
+        <tr>
+          <th>Room ID</th>
+          <th>Room Name</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Equipment</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for room in spaces %}
+        <tr>
+          <td>{{ room.id }}</td>
+          <td>{{ room.name }}</td>
+          <td>{{ room.type }}</td>
+          <td>
+            <span class="badge 
+              {% if room.status == 'available' %} status-available 
+              {% elif room.status == 'reserved' %} status-reserved 
+              {% elif room.status == 'occupied' %} status-occupied 
+              {% else %} status-default {% endif %}
+            ">
+              {{ room.status.title() }}
+            </span>
+          </td>
+          <td>{{ room.equipment | join(', ') }}</td>
+          <td>
+            <a href="{{ url_for('view_dashboard', room_id=room.id) }}" class="btn-view">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

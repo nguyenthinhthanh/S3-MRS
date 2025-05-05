@@ -291,17 +291,25 @@ def validate_qr():
         flash("No valid reservation found or invalid time.", "error")
         return redirect("/check-in")
 
+# Color helper
+def status_color(status):
+    colors = {
+        "dirty": "Dirty",
+        "reserved": "Reserved",
+        "occupied": "Occupied",
+        "available": "Vacant"
+    }
+    return colors.get(status.lower(), "secondary")
+
 @app.route("/device-management")
-def device_management():
-    devices = [
-        {"name": "Smart TV 1", "icon": "fa-tv", "on": True, "hours": 3, "usage": 5},
-        {"name": "Light 1", "icon": "fa-lightbulb", "on": False, "hours": 3, "usage": 5},
-        {"name": "Air Conditioner 1", "icon": "fa-snowflake", "on": True, "hours": 3, "usage": 5},
-        {"name": "Light 2", "icon": "fa-lightbulb", "on": True, "hours": 3, "usage": 5},
-        {"name": "Smart TV 2", "icon": "fa-tv", "on": False, "hours": 3, "usage": 5},
-        {"name": "AC 2", "icon": "fa-snowflake", "on": True, "hours": 3, "usage": 5},
-    ]
-    return render_template("devices.html", devices=devices)
+def space_list():
+    return render_template("device_management.html", spaces=spaces, status_color=status_color)
+@app.route('/device-management/room/<int:room_id>')
+def view_dashboard(room_id):
+    room = next((r for r in spaces if r["id"] == room_id), None)
+    if not room:
+        return "Room not found", 404
+    return render_template('dashboard.html', room=room)
 
 
 if __name__ == "__main__":

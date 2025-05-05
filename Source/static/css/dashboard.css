@@ -1,0 +1,48 @@
+.room-title {
+    font-weight: bold;
+    color: #1c124e;
+  }
+  
+  .env-card {
+    background-color: #2c2c2c;
+    color: #d0cfff;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    height: 100%;
+  }
+  .env-card .icon {
+    font-size: 24px;
+    color: #d0cfff;
+    margin-bottom: 10px;
+  }
+  .env-card .value {
+    font-size: 28px;
+    font-weight: bold;
+  }
+  .env-card .label {
+    font-size: 14px;
+    color: #aaa;
+    margin-top: 6px;
+  }
+  
+  .device-card {
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    height: 100%;
+  }
+  .device-card .device-name {
+    font-weight: 500;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .device-card .energy {
+    font-weight: bold;
+    text-align: right;
+    color: #a18aff;
+    font-size: 14px;
+  }
+  
