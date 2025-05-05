@@ -1,85 +1,94 @@
 {% extends "base.html" %}
-{% block title %}{{ room.name }} - Dashboard{% endblock %}
+{% block title %}{{ room.name }} – Dashboard{% endblock %}
 
 {% block extra_head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="device-dashboard container py-4">
-  <h2 class="room-title text-center mb-4">{{ room.name }}</h2>
+<div class="container py-4">
+  <h2 class="text-center mb-5">{{ room.name }}</h2>
 
   <!-- ENVIRONMENT CARDS -->
-  <div class="row g-3 mb-4 justify-content-center">
-    <div class="col-md-3">
-      <div class="env-card">
-        <div class="icon"><i class="fas fa-snowflake"></i></div>
-        <div class="value">24°C</div>
-        <div class="label">Temperature</div>
+  <div class="row g-4 mb-5 justify-content-center">
+    {% for icon, value, label in [
+        ('fa-snowflake', '24°C', 'Temperature'),
+        ('fa-tint',      '24%', 'Humidity'),
+        ('fa-moon',      '60%', 'Light')
+      ] %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="card text-center shadow-sm h-100">
+        <div class="card-body py-4">
+          <i class="fas {{ icon }} fa-2x mb-3 text-primary"></i>
+          <h3 class="card-title mb-1">{{ value }}</h3>
+          <p class="text-muted mb-0">{{ label }}</p>
+        </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="env-card">
-        <div class="icon"><i class="fas fa-tint"></i></div>
-        <div class="value">24%</div>
-        <div class="label">Humidity</div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="env-card">
-        <div class="icon"><i class="fas fa-moon"></i></div>
-        <div class="value">60%</div>
-        <div class="label">Light</div>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 
-  <!-- DEVICES -->
-  <div class="row g-3">
+  <!-- DEVICE CARDS -->
+  <div class="row g-4">
+    <!-- Smart TVs -->
     {% for i in range(1, 3) %}
     <div class="col-sm-6 col-md-4 col-lg-3">
-      <div class="device-card">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <i class="fas fa-tv"></i>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="tv{{ i }}" {% if i == 2 %}checked{% endif %}>
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <i class="fas fa-tv fa-lg text-secondary"></i>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" id="tv{{ i }}" {% if i == 2 %}checked{% endif %}>
+            </div>
+          </div>
+          <h5 class="card-title">Smart TV {{ i }}</h5>
+          <small class="text-muted">Active for 3 hours</small>
+          <div class="mt-3 text-end">
+            <span class="fw-bold text-primary">5 kWh</span>
           </div>
         </div>
-        <div class="device-name">Smart TV {{ i }}</div>
-        <small>Active for 3 hours</small>
-        <div class="energy">5kWh</div>
       </div>
     </div>
     {% endfor %}
 
+    <!-- Lights -->
     {% for i in range(1, 5) %}
     <div class="col-sm-6 col-md-4 col-lg-3">
-      <div class="device-card">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <i class="fas fa-lightbulb"></i>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="light{{ i }}" checked>
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <i class="fas fa-lightbulb fa-lg text-warning"></i>
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" id="light{{ i }}" checked>
+            </div>
+          </div>
+          <h5 class="card-title">Light {{ i }}</h5>
+          <small class="text-muted">Active for 3 hours</small>
+          <div class="mt-3 text-end">
+            <span class="fw-bold text-primary">5 kWh</span>
           </div>
         </div>
-        <div class="device-name">Light {{ i }}</div>
-        <small>Active for 3 hours</small>
-        <div class="energy">5kWh</div>
       </div>
     </div>
     {% endfor %}
 
+    <!-- Air Conditioners -->
     {% for i in range(1, 3) %}
     <div class="col-sm-6 col-md-4 col-lg-3">
-      <div class="device-card">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <i class="fas fa-snowflake"></i>
+      <div class="card shadow-sm h-100">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-snowflake fa-lg text-info me-2"></i>
+            <h5 class="mb-0">Air Conditioner {{ i }}</h5>
+          </div>
+          <input type="range" class="form-range" min="16" max="32" value="24">
+          <div class="d-flex justify-content-between text-muted small">
+            <span>16°C</span><span>32°C</span>
+          </div>
+          <div class="mt-3 text-end">
+            <span class="fw-bold text-primary">5 kWh</span>
+          </div>
         </div>
-        <div class="device-name">Air Conditioner {{ i }}</div>
-        <input type="range" class="form-range" min="16" max="32" value="24">
-        <div class="d-flex justify-content-between text-muted" style="font-size: 12px;">
-          <span>16°C</span><span>32°C</span>
-        </div>
-        <div class="energy mt-2">5kWh</div>
       </div>
     </div>
     {% endfor %}
