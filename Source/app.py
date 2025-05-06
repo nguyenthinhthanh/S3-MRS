@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session, flash
 from datetime import datetime, timedelta
+import re
 
 app = Flask(__name__)
 app.secret_key = 's3mrs_demo_secret'  # dùng cho session
@@ -7,27 +8,59 @@ app.secret_key = 's3mrs_demo_secret'  # dùng cho session
 # Dummy user (hard-coded)
 USERS = {'student1': 'password123'}
 
+# Tạo danh sách 7 ngày liên tiếp với định dạng YYYY-MM-DD
+days = [(datetime.today() + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+# Tạo danh sách giờ từ 08:00 đến 22:00
+hours = [f"{h}:00" for h in range(8, 23)]
+
 # In-memory spaces data
 spaces = [
     {"id": 1, "name": "Room A101", "type": "Group Study",
      "equipment": ["Whiteboard", "Projector", "AC"],
-     "status": "available", "reserved_from": None, "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None,
+     "capacity": 30},
+
     {"id": 2, "name": "Cubicle B202", "type": "Individual Study",
      "equipment": ["Power Outlet", "Lamp"],
-     "status": "available", "reserved_from": None, "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None,
+     "total_capacity": 4, "current_reservations": 1},
+
     {"id": 3, "name": "Room C303", "type": "Group Study",
      "equipment": ["Whiteboard", "Conference Phone"],
-     "status": "available", "reserved_from": None, "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None,
+     "capacity": 25},
+
     {"id": 4, "name": "Cubicle D404", "type": "Individual Study",
      "equipment": ["Power Outlet", "Monitor"],
-     "status": "available", "reserved_from": None, "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None,
+     "total_capacity": 4, "current_reservations": 2},
+
     {"id": 5, "name": "Room E505", "type": "Group Study",
      "equipment": ["Interactive Screen", "AC"],
-     "status": "available", "reserved_from": None, "reserved_until": None},
+     "status": "available", "reserved_from": None, "reserved_until": None,
+     "capacity": 35},
+
     {"id": 6, "name": "Cubicle F606", "type": "Individual Study",
      "equipment": ["Power Outlet", "Desk Lamp"],
      "status": "occupied", "reserved_from": None,
-     "reserved_until": (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat()}
+     "reserved_until": (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat(),
+     "total_capacity": 4, "current_reservations": 4},
+
+    # Các mục mới cho Building A
+    {"id": 7, "name": "Cubicle A102", "type": "Individual Study",
+     "equipment": ["Power Outlet", "Lamp"],
+     "status": "available",
+     "total_capacity": 4, "current_reservations": 0},
+
+    {"id": 8, "name": "Cubicle A103", "type": "Individual Study",
+     "equipment": ["Power Outlet", "Lamp"],
+     "status": "available",
+     "total_capacity": 4, "current_reservations": 1},
+
+    {"id": 9, "name": "Open Space C301", "type": "Open Study Area",
+     "equipment": ["Whiteboard", "AC"],
+     "status": "available",
+     "total_capacity": 50, "current_reservations": 15}
 ]
 now = datetime.now()
 RESERVATIONS = {
@@ -311,6 +344,70 @@ def view_dashboard(room_id):
         return "Room not found", 404
     return render_template('dashboard.html', room=room)
 
+# --- Nhóm các phòng theo tòa/tầng ---
+floors_data = {}
+floors_summary = {}
+
+for space in spaces:
+    tokens = space["name"].split()
+    token_found = None
+    # Duyệt từ token thứ 2 trở đi
+    for token in tokens[1:]:
+        # Nếu token khớp với mẫu một chữ cái (A-Z) theo sau là chữ số
+        if re.match(r'^[A-Z]\d+', token, re.I):
+            token_found = token
+            break
+    if token_found:
+        building_letter = token_found[0].upper()
+        # Lấy chữ số đầu tiên (nếu có)
+        floor_num = token_found[1] if len(token_found) > 1 and token_found[1].isdigit() else ""
+        floor_key = f"{building_letter}_Floor{floor_num}" if floor_num else f"{building_letter}_Floor"
+    else:
+        # Fallback: dùng chữ đầu của toàn bộ tên nếu không tìm thấy token phù hợp
+        building_letter = space["name"][0].upper()
+        floor_key = f"{building_letter}_Floor"
+
+    if floor_key not in floors_data:
+        floors_data[floor_key] = []
+    floors_data[floor_key].append(space)
+
+# Tính toán summary cho mỗi tòa (đếm số phòng theo loại)
+for floor, rooms in floors_data.items():
+    summary = {}
+    for room in rooms:
+        rtype = room["type"]
+        summary[rtype] = summary.get(rtype, 0) + 1
+    floors_summary[floor] = summary
+
+
+@app.route('/search-space')
+def search_space_page():
+    return render_template("search_space.html", days=days, hours=hours,
+                           floors_data=floors_data, floors_summary=floors_summary,
+                           reservations=RESERVATIONS)
+
+
+# Route hiển thị thông tin của phòng
+# Với các phòng, ngoài danh sách thiết bị:
+#   - Nếu Group Study: hiển thị sức chứa và trạng thái.
+#   - Nếu khác: hiển thị số lượng đã đặt / tổng sức chứa.
+@app.route('/get-room-info', methods=["GET"])
+def get_room_info():
+    room_id = request.args.get("room_id", type=int)
+    room = next((s for s in spaces if s["id"] == room_id), None)
+    if room:
+        detail = "<ul>"
+        detail += f"<li><strong>Equipment:</strong> {', '.join(room.get('equipment', []))}</li>"
+        if room["type"] == "Group Study":
+            detail += f"<li><strong>Capacity:</strong> {room.get('capacity')}</li>"
+            detail += f"<li><strong>Status:</strong> {room.get('status')}</li>"
+        else:
+            current = room.get('current_reservations', 0)
+            total = room.get('total_capacity', 0)
+            detail += f"<li><strong>Bookings:</strong> {current} / {total}</li>"
+        detail += "</ul>"
+        return detail
+    return "No details available", 404
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)
