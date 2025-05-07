@@ -37,7 +37,7 @@ spaces = [
 
     {"id": 5, "name": "Room E505", "type": "Group Study",
      "equipment": ["Interactive Screen", "AC"],
-     "status": "available", "reserved_from": None, "reserved_until": None,
+     "status": "occupied", "reserved_from": None, "reserved_until": None,
      "capacity": 35},
 
     {"id": 6, "name": "Cubicle F606", "type": "Individual Study",
@@ -49,18 +49,18 @@ spaces = [
     # Các mục mới cho Building A
     {"id": 7, "name": "Cubicle A102", "type": "Individual Study",
      "equipment": ["Power Outlet", "Lamp"],
-     "status": "available",
+     "status": "available", "reserved_from": None, "reserved_until": None,
      "total_capacity": 4, "current_reservations": 0},
 
     {"id": 8, "name": "Cubicle A103", "type": "Individual Study",
      "equipment": ["Power Outlet", "Lamp"],
-     "status": "available",
+     "status": "available", "reserved_from": None, "reserved_until": None,
      "total_capacity": 4, "current_reservations": 1},
 
     {"id": 9, "name": "Open Space C301", "type": "Open Study Area",
      "equipment": ["Whiteboard", "AC"],
-     "status": "available",
-     "total_capacity": 50, "current_reservations": 15}
+     "status": "available", "reserved_from": None, "reserved_until": None,
+     "total_capacity": 50, "current_reservations": 0}
 ]
 now = datetime.now()
 RESERVATIONS = {
@@ -75,6 +75,13 @@ RESERVATIONS = {
         {
             "username": "admin",
             "start": (now + timedelta(hours=1)).isoformat(),
+            "end": (now + timedelta(hours=2)).isoformat()
+        }
+    ],
+    5: [
+        {
+            "username": "admin",
+            "start": (now).isoformat(),
             "end": (now + timedelta(hours=2)).isoformat()
         }
     ]
@@ -344,34 +351,50 @@ def view_dashboard(room_id):
         return "Room not found", 404
     return render_template('dashboard.html', room=room)
 
-# --- Nhóm các phòng theo tòa/tầng ---
+def update_spaces_with_reservations():
+    """
+    Cập nhật trạng thái ban đầu cho các room dựa trên thời gian hiện tại.
+    (Chỉ dùng cho việc render ban đầu; các cập nhật sau dựa vào selected time qua AJAX.)
+    """
+    for room in spaces:
+        room_id = room["id"]
+        if room_id in RESERVATIONS:
+            current_time = datetime.now().isoformat()
+            for res in RESERVATIONS[room_id]:
+                res_start = res["start"]
+                res_end = res["end"]
+                if res_start <= current_time <= res_end:
+                    room["reserved_from"] = res_start
+                    room["reserved_until"] = res_end
+                    room["status"] = "reserved"
+                    break
+                else:
+                    room["status"] = "available"
+
+update_spaces_with_reservations()
+
+# ----------------------- Nhóm phòng theo tòa/tầng -----------------------
 floors_data = {}
 floors_summary = {}
 
 for space in spaces:
     tokens = space["name"].split()
     token_found = None
-    # Duyệt từ token thứ 2 trở đi
     for token in tokens[1:]:
-        # Nếu token khớp với mẫu một chữ cái (A-Z) theo sau là chữ số
         if re.match(r'^[A-Z]\d+', token, re.I):
             token_found = token
             break
     if token_found:
         building_letter = token_found[0].upper()
-        # Lấy chữ số đầu tiên (nếu có)
         floor_num = token_found[1] if len(token_found) > 1 and token_found[1].isdigit() else ""
         floor_key = f"{building_letter}_Floor{floor_num}" if floor_num else f"{building_letter}_Floor"
     else:
-        # Fallback: dùng chữ đầu của toàn bộ tên nếu không tìm thấy token phù hợp
         building_letter = space["name"][0].upper()
         floor_key = f"{building_letter}_Floor"
-
     if floor_key not in floors_data:
         floors_data[floor_key] = []
     floors_data[floor_key].append(space)
 
-# Tính toán summary cho mỗi tòa (đếm số phòng theo loại)
 for floor, rooms in floors_data.items():
     summary = {}
     for room in rooms:
@@ -379,35 +402,92 @@ for floor, rooms in floors_data.items():
         summary[rtype] = summary.get(rtype, 0) + 1
     floors_summary[floor] = summary
 
-
+# ----------------------- Routes -----------------------
 @app.route('/search-space')
 def search_space_page():
+    now = datetime.now()
+    current_hour = now.hour
+    days = [(datetime.today() + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
+    hours = [f"{h}:00" for h in range(current_hour, 22)]
     return render_template("search_space.html", days=days, hours=hours,
                            floors_data=floors_data, floors_summary=floors_summary,
                            reservations=RESERVATIONS)
 
-
-# Route hiển thị thông tin của phòng
-# Với các phòng, ngoài danh sách thiết bị:
-#   - Nếu Group Study: hiển thị sức chứa và trạng thái.
-#   - Nếu khác: hiển thị số lượng đã đặt / tổng sức chứa.
 @app.route('/get-room-info', methods=["GET"])
 def get_room_info():
     room_id = request.args.get("room_id", type=int)
+    selected_day = request.args.get("day")
+    selected_hour = request.args.get("hour")
+    selectedDT = None
+    if selected_day and selected_hour:
+        try:
+            selectedDT = datetime.fromisoformat(f"{selected_day}T{selected_hour}")
+        except Exception:
+            selectedDT = None
+
     room = next((s for s in spaces if s["id"] == room_id), None)
     if room:
         detail = "<ul>"
         detail += f"<li><strong>Equipment:</strong> {', '.join(room.get('equipment', []))}</li>"
         if room["type"] == "Group Study":
             detail += f"<li><strong>Capacity:</strong> {room.get('capacity')}</li>"
-            detail += f"<li><strong>Status:</strong> {room.get('status')}</li>"
+            # Dùng RESERVATIONS trực tiếp cho nhóm Group Study.
+            res_data = RESERVATIONS.get(room_id, [])
+            matched = None
+            if selectedDT:
+                for res in res_data:
+                    resStart = datetime.fromisoformat(res["start"])
+                    resEnd = datetime.fromisoformat(res["end"])
+                    if resStart <= selectedDT <= resEnd:
+                        matched = res
+                        break
+            if matched:
+                detail += f"<li><strong>Status:</strong> Reserved</li>"
+                detail += f"<li><strong>Reserved from:</strong> {matched['start'].replace('T', ' ')}</li>"
+                detail += f"<li><strong>Reserved until:</strong> {matched['end'].replace('T', ' ')}</li>"
+            else:
+                detail += f"<li><strong>Status:</strong> Available</li>"
         else:
-            current = room.get('current_reservations', 0)
-            total = room.get('total_capacity', 0)
+            # Với các phòng Individual Study / Open Study Area,
+            # hiển thị số đặt / tổng sức chứa nếu có.
+            current = 0
+            if room_id in RESERVATIONS:
+                # Số lượng đặt là số phần tử trong danh sách
+                current = len(RESERVATIONS[room_id])
+            total = room.get('total_capacity', room.get('capacity', 0))
             detail += f"<li><strong>Bookings:</strong> {current} / {total}</li>"
         detail += "</ul>"
         return detail
     return "No details available", 404
+
+@app.route('/filter-reservations', methods=["GET"])
+def filter_reservations():
+    selected_day = request.args.get("day")  # Format: YYYY-MM-DD
+    selected_hour = request.args.get("hour")  # Format: HH:MM
+    if not selected_day or not selected_hour:
+         return jsonify([]), 400
+    try:
+         selected_dt = datetime.fromisoformat(f"{selected_day}T{selected_hour}")
+    except Exception as e:
+         return jsonify({"error": "Invalid datetime format"}), 400
+
+    filtered = []
+    for room in spaces:
+         room_id = room["id"]
+         if room_id in RESERVATIONS:
+             for res in RESERVATIONS[room_id]:
+                 res_start = datetime.fromisoformat(res["start"])
+                 res_end = datetime.fromisoformat(res["end"])
+                 if res_start <= selected_dt <= res_end:
+                     filtered.append({
+                         "room_id": room_id,
+                         "room_name": room["name"],
+                         "start": res["start"],
+                         "end": res["end"],
+                         "status": room["status"],
+                         "username": res["username"]
+                     })
+    return jsonify(filtered)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug=True)

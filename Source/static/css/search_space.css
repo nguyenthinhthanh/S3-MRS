@@ -48,3 +48,8 @@
 .info-content {
   font-size: 18px;
 }
+
+.room-reserved {
+    background-color: #444 !important;
+    color: white !important;
+}
