@@ -1,11 +1,264 @@
 {% extends "base.html" %}
 
-{% block title %}Notifications - S3-MRS{% endblock %}
+{% block title %}System Management - S3-MRS{% endblock %}
 
 {% block extra_head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
 {% endblock %}
 
 {% block content %}
+<div class="settings-container">
+  <h1>System Management</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-link active" onclick="openTab(event, 'dashboard')">Dashboard</button>
+    <button class="tab-link" onclick="openTab(event, 'report')">Export Reports</button>
+    <button class="tab-link" onclick="openTab(event, 'users')">User Management</button>
+    <button class="tab-link" onclick="openTab(event, 'notify')">Send Notification</button>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div id="dashboard" class="tab-content active">
+    <h2>Room Dashboard</h2>
+    <input type="text" id="search-room" placeholder="Search room..." oninput="filterRooms()">
+    <table id="room-table">
+      <thead>
+        <tr><th>Name</th><th>Status</th><th>Devices</th><th>Reserved Until</th></tr>
+      </thead>
+      <tbody>
+        {% for space in spaces %}
+        <tr>
+          <td>{{ space.name }}</td>
+          <td>{{ space.status }}</td>
+          <td>{{ space.equipment | join(', ') }}</td>
+          <td>{{ space.reserved_until if space.reserved_until else 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+<!-- Report Tab -->
+<div id="report" class="tab-content">
+  <h2>Export Reports</h2>
+
+<!-- Form export report -->
+<form method="POST" action="{{ url_for('export_report') }}">
+  <label for="report_type">Report Type:</label>
+  <select name="report_type" id="report_type" required>
+    <option value="summary">Summary</option>
+    <option value="detailed">Detailed IoT Usage</option>
+  </select>
+
+  <label for="start_date">Time Range:</label>
+  <input type="date" name="start_date" id="start_date" required>
+  to
+  <input type="date" name="end_date" id="end_date" required>
+
+  <label for="format">Format:</label>
+  <select name="format" id="format" required>
+    <option value="pdf">PDF</option>
+    <option value="excel">Excel</option>
+  </select>
+
+  <button type="submit">Export Report</button>
+</form>
+
+  <!-- Hiển thị thông báo flash nếu có -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+</div>
+
+
+
+  <!-- Users Tab -->
+  <div id="users" class="tab-content">
+    <h2>User Management</h2>
+
+    <!-- Thông báo sau khi thêm/sửa/xóa người dùng -->
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  <div class="flash-messages">
+    {% for message in messages %}
+      <div class="flash-success">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endwith %}
+
+
+    <!-- Form thêm người dùng -->
+    <form method="POST" action="{{ url_for('add_user') }}">
+      <input type="text" id="new-username" name="username" placeholder="Name" required>
+      <select id="new-role" name="role" required>
+          <option value="">Select Role</option>
+          <option value="Admin">Admin</option>
+          <option value="Student">Student</option>
+          <option value="Teacher">Teacher</option>
+      </select>
+      <button type="submit">Add User</button>
+    </form>
+  
+    <!-- Danh sách người dùng -->
+    <table id="user-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for username, role in users.items() %}
+          <tr>
+            <td colspan="3">
+              <!-- Form sửa người dùng -->
+              <form method="POST" action="{{ url_for('edit_user') }}" style="display: inline-block;">
+                <input type="hidden" name="old_username" value="{{ username }}">
+                <input type="text" name="new_username" value="{{ username }}" required>
+                <select name="new_role" required>
+                  <option value="Admin" {% if role == "Admin" %}selected{% endif %}>Admin</option>
+                  <option value="Student" {% if role == "Student" %}selected{% endif %}>Student</option>
+                  <option value="Teacher" {% if role == "Teacher" %}selected{% endif %}>Teacher</option>
+                </select>
+                <button type="submit">Save</button>
+              </form>
+      
+              <!-- Form xóa người dùng -->
+              <form method="POST" action="{{ url_for('delete_user') }}" style="display: inline-block; margin-left: 10px;">
+                <input type="hidden" name="username" value="{{ username }}">
+                <button type="submit" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+<!-- Notification Tab -->
+<div id="notify" class="tab-content">
+  <h2>Send Notification</h2>
+  <form method="POST" action="{{ url_for('send_notification') }}" enctype="multipart/form-data">
+    <label>Recipient Email:</label>
+    <input type="email" name="recipient" placeholder="e.g. student@example.com" required>
+
+    <label>Subject:</label>
+    <input type="text" name="subject" placeholder="Enter subject..." required>
+
+    <label>Message:</label>
+    <textarea name="message" rows="4" placeholder="Enter message..." required></textarea>
+
+    <label>Attachment (optional):</label>
+    <input type="file" name="attachment">
+
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+
+<script>
+  function openTab(evt, tabName) {
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(c => c.classList.remove('active'));
+
+    const links = document.querySelectorAll('.tab-link');
+    links.forEach(l => l.classList.remove('active'));
+
+    document.getElementById(tabName).classList.add('active');
+    evt.currentTarget.classList.add('active');
+  }
+
+  function filterRooms() {
+    const input = document.getElementById('search-room').value.toLowerCase();
+    const rows = document.querySelectorAll('#room-table tbody tr');
+    rows.forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none';
+    });
+  }
+
+  function addUser(event) {
+    event.preventDefault();
+    const name = document.getElementById('new-username').value.trim();
+    const role = document.getElementById('new-role').value;
+    if (!name || !role) return;
+
+    const table = document.getElementById('user-table').querySelector('tbody');
+    const row = table.insertRow();
+    row.innerHTML = `
+      <td>${name}</td>
+      <td>${role}</td>
+      <td>
+        <button onclick="editUser(this)">Edit</button>
+        <button onclick="deleteUser(this)">Delete</button>
+      </td>`;
+    event.target.reset();
+  }
+
+  function deleteUser(button) {
+    const row = button.closest('tr');
+    row.remove();
+  }
+
+  function editUser(button) {
+    const row = button.closest('tr');
+    const nameCell = row.children[0];
+    const roleCell = row.children[1];
+    const actionsCell = row.children[2];
+
+    const currentName = nameCell.textContent.trim();
+    const currentRole = roleCell.textContent.trim();
+
+    nameCell.innerHTML = `<input type="text" value="${currentName}" id="edit-name">`;
+    roleCell.innerHTML = `
+      <select id="edit-role">
+        <option value="Admin" ${currentRole === "Admin" ? "selected" : ""}>Admin</option>
+        <option value="Student" ${currentRole === "Student" ? "selected" : ""}>Student</option>
+        <option value="Teacher" ${currentRole === "Teacher" ? "selected" : ""}>Teacher</option>
+      </select>
+    `;
+    actionsCell.innerHTML = `
+      <button onclick="saveUser(this)">Save</button>
+      <button onclick="cancelEdit(this, '${currentName}', '${currentRole}')">Cancel</button>
+    `;
+  }
+
+  function saveUser(button) {
+    const row = button.closest('tr');
+    const nameInput = row.querySelector('#edit-name');
+    const roleSelect = row.querySelector('#edit-role');
+
+    const newName = nameInput.value.trim();
+    const newRole = roleSelect.value;
+
+    if (newName && newRole) {
+      row.children[0].textContent = newName;
+      row.children[1].textContent = newRole;
+      row.children[2].innerHTML = `
+        <button onclick="editUser(this)">Edit</button>
+        <button onclick="deleteUser(this)">Delete</button>
+      `;
+    }
+  }
+
+  function cancelEdit(button, originalName, originalRole) {
+    const row = button.closest('tr');
+    row.children[0].textContent = originalName;
+    row.children[1].textContent = originalRole;
+    row.children[2].innerHTML = `
+      <button onclick="editUser(this)">Edit</button>
+      <button onclick="deleteUser(this)">Delete</button>
+    `;
+  }
+
+</script>
 
 {% endblock %}
