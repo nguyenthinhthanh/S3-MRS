@@ -1,0 +1,55 @@
+/* Định dạng riêng cho trang Search Space */
+.search-space-container {
+  padding: 20px;
+}
+
+.floors-wrapper {
+  margin-top: 20px;
+}
+
+/* Các card của tòa */
+/* Với khu vực còn chỗ: xanh */
+.floor-container.available {
+  border-color: #007bff !important;
+  background-color: #e6f7ff !important;
+}
+/* Với khu vực hết chỗ: xám */
+.floor-container.full {
+  border-color: #888888 !important;
+  background-color: #bbb !important;
+}
+
+.floor-header {
+  background-color: rgba(0, 123, 255, 0.15);
+}
+
+.expand-btn {
+  font-size: 20px;
+  color: #007bff;
+}
+
+/* Các cột trong collapse */
+.map-left, .info-right {
+  border: 1px dashed #007bff;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.room-map .room-block {
+  background: #00aaff;
+  color: #fff;
+  padding: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.info-content {
+  font-size: 18px;
+}
+
+.room-reserved {
+    background-color: #444 !important;
+    color: white !important;
+}

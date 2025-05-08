@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/search_space.css') }}">
+  <!-- Tải jQuery chỉ cho trang này -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="search-space-container">
+  <h2 class="text-center mb-4">Available Study Spaces</h2>
+
+  <!-- Thanh chọn ngày & giờ -->
+  <div class="row mb-4">
+    <div class="col-md-6 offset-md-3">
+      <div class="card p-3">
+        <div class="row">
+          <div class="col-md-6">
+            <label for="date" class="form-label fw-bold">Choose Date:</label>
+            <select id="date" class="form-select">
+              {% for day in days %}
+                <option value="{{ day }}">{{ day }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="hour" class="form-label fw-bold">Choose Time:</label>
+            <select id="hour" class="form-select">
+              {% for hour in hours %}
+                <option value="{{ hour }}">{{ hour }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phần thông tin đặt chỗ (nếu cần) -->
+  <div id="reservation-section" class="mb-4"></div>
+
+  <!-- Danh sách tòa/tầng -->
+  <div class="floors-wrapper">
+    {% for floor, rooms in floors_data.items() %}
+      <div class="card mb-4 floor-container" data-floor-name="{{ floor }}">
+        <div class="card-header d-flex justify-content-between align-items-center floor-header">
+          <span>{{ floor }}</span>
+          <button class="btn btn-link expand-btn" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="collapse" id="collapse{{ loop.index }}">
+          <div class="card-body">
+            <div class="row">
+              <!-- Phần hiển thị Map Room (bên trái) -->
+              <div class="col-md-6 map-left">
+                <h5>Room Map</h5>
+                <div class="room-map">
+                  {% for room in rooms %}
+                    <div class="room-block mb-2"
+                         data-room-id="{{ room.id }}"
+                         data-room-name="{{ room.name }}"
+                         data-reserved-from="{{ room.reserved_from }}"
+                         data-reserved-until="{{ room.reserved_until }}"
+                         data-status="{{ room.status }}"
+                         data-room-type="{{ room.type }}"
+                         data-total-capacity="{% if room.total_capacity %}{{ room.total_capacity }}{% else %}{{ room.capacity }}{% endif %}">
+                      {{ room.name }}
+                      <!-- Không hiển thị thông tin trong ngoặc -->
+                      <span class="reservation-status"></span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+              <!-- Phần hiển thị Overview của tòa (bên phải) -->
+              <div class="col-md-6 info-right">
+                <h5 class="info-title overview-toggle" style="cursor: pointer;">{{ floor }} Overview</h5>
+                <div class="info-content">
+                    <p><strong>Summary:</strong></p>
+                    <ul>
+                        {% for rtype, count in floors_summary[floor].items() %}
+                            <li>{{ rtype }}: {{ count }} room{% if count > 1 %}s{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                    <hr>
+                    <p><strong>Room Status:</strong></p>
+                    <!-- Nội dung Overview sẽ được cập nhật động -->
+                    <div class="overview-status"></div>
+                </div>
+              </div>
+            </div><!-- end row -->
+          </div><!-- end card-body -->
+        </div><!-- end collapse -->
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Cập nhật trạng thái của từng room dựa trên thời gian được chọn.
+  // Với "Open Study Area" và "Individual Study": so sánh số lượng đặt với tổng sức chứa.
+  // Với "Group Study": kiểm tra khoảng thời gian đặt.
+  function updateRoomStatuses() {
+    var selectedDay = $("#date").val();
+    var selectedHour = $("#hour").val();
+    var selectedDT = new Date(selectedDay + "T" + selectedHour);
+
+    $.ajax({
+      url: "/filter-reservations",
+      type: "GET",
+      data: { day: selectedDay, hour: selectedHour },
+      success: function(response) {
+        $(".room-block").each(function() {
+          var roomId = $(this).data("room-id");
+          var roomType = $(this).data("room-type");
+          var totalCapacity = parseInt($(this).data("total-capacity"));
+          var reservationsForRoom = response.filter(r => r.room_id == roomId);
+
+          if (roomType === "Open Study Area" || roomType === "Individual Study") {
+            if (totalCapacity > 0 && reservationsForRoom.length >= totalCapacity) {
+              $(this).addClass("room-reserved");
+              $(this).css({ "background-color": "#444", "color": "white" });
+              $(this).find(".reservation-status").text(""); // Không hiển thị thông tin
+              $(this).attr("data-status", "reserved");
+              $(this).attr("data-reserved-from", reservationsForRoom[0].start);
+              $(this).attr("data-reserved-until", reservationsForRoom[0].end);
+            } else {
+              $(this).removeClass("room-reserved");
+              $(this).css({ "background-color": "", "color": "" });
+              $(this).find(".reservation-status").text("");
+              $(this).attr("data-status", "available");
+              $(this).attr("data-reserved-from", "");
+              $(this).attr("data-reserved-until", "");
+            }
+          } else {
+            // Với Group Study, nếu có reservation và thời gian chọn nằm trong khoảng thì đánh dấu reserved.
+            if (reservationsForRoom.length > 0) {
+              var resStart = new Date(reservationsForRoom[0].start);
+              var resUntil = new Date(reservationsForRoom[0].end);
+              if (selectedDT >= resStart && selectedDT <= resUntil) {
+                $(this).addClass("room-reserved");
+                $(this).css({ "background-color": "#444", "color": "white" });
+                // Luôn hiển thị Reserved cho Group Study
+                $(this).find(".reservation-status").text("");
+                $(this).attr("data-reserved-from", reservationsForRoom[0].start);
+                $(this).attr("data-reserved-until", reservationsForRoom[0].end);
+                $(this).attr("data-status", "reserved");
+              } else {
+                $(this).removeClass("room-reserved");
+                $(this).css({ "background-color": "", "color": "" });
+                $(this).find(".reservation-status").text("");
+                $(this).attr("data-status", "available");
+                $(this).attr("data-reserved-from", "");
+                $(this).attr("data-reserved-until", "");
+              }
+            } else {
+              $(this).removeClass("room-reserved");
+              $(this).css({ "background-color": "", "color": "" });
+              $(this).find(".reservation-status").text("");
+              $(this).attr("data-status", "available");
+              $(this).attr("data-reserved-from", "");
+              $(this).attr("data-reserved-until", "");
+            }
+          }
+        });
+        updateOverview();
+        updateBuildingStatus();
+      },
+      error: function() {
+        console.log("Error fetching reservations.");
+      }
+    });
+  }
+
+  // Cập nhật Overview của từng tòa dựa trên thuộc tính data-status và data-room-name.
+  function updateOverview() {
+    $(".floor-container").each(function(){
+      var overviewHTML = "";
+      $(this).find(".room-block").each(function(){
+         var roomName = $(this).data("room-name");
+         var status = $(this).attr("data-status");
+         status = (status && status.toLowerCase() === "reserved") ? "Reserved" : "Available";
+         overviewHTML += "<p><strong>" + roomName + ":</strong> " + status + "</p>";
+      });
+      $(this).find(".overview-status").html(overviewHTML);
+    });
+  }
+
+  // Cập nhật trạng thái của tòa: nếu tất cả các room đều reserved, thêm class "full".
+  function updateBuildingStatus() {
+    $(".floor-container").each(function(){
+      let allReserved = true;
+      $(this).find(".room-block").each(function(){
+        if ($(this).attr("data-status").toLowerCase() !== "reserved") {
+          allReserved = false;
+        }
+      });
+      if (allReserved) {
+        $(this).addClass("full");
+      } else {
+        $(this).removeClass("full");
+      }
+    });
+  }
+
+  $(document).ready(function() {
+    $(".info-right").each(function() {
+      var originalContent = $(this).find(".info-content").html();
+      $(this).data("originalContent", originalContent);
+    });
+    updateRoomStatuses();
+    $("#date, #hour").on("change", function() {
+      // Cập nhật lại trạng thái các phòng
+      updateRoomStatuses();
+      updateOverview();
+      updateBuildingStatus();
+
+      // Nếu đang ở chế độ chi tiết (detail), tự động phục hồi về Overview.
+      $(".info-right").each(function(){
+          // Kiểm tra nếu xuất hiện link "back-overview" tức là đang ở chi tiết.
+          if ($(this).find(".back-overview").length > 0) {
+              var originalContent = $(this).data("originalContent");
+              // Lấy tiêu đề tòa từ .floor-header (đảm bảo tiêu đề Overview cũng được khôi phục)
+              var floorTitle = $(this).closest(".floor-container").find(".floor-header span").text();
+              $(this).find(".info-title").html(floorTitle + " Overview");
+              $(this).find(".info-content").html(originalContent);
+              // Sau đó, cập nhật lại nội dung Overview theo trạng thái các phòng
+              updateOverview();
+          }
+      });
+    });
+  });
+
+  // Khi click vào room để xem chi tiết
+  $(document).on("click", ".room-block", function() {
+    var roomId = $(this).data("room-id");
+    var roomName = $(this).data("room-name");
+    var container = $(this).closest(".floor-container");
+    $.ajax({
+      url: "/get-room-info",
+      type: "GET",
+      data: { room_id: roomId, day: $("#date").val(), hour: $("#hour").val() },
+      success: function(response) {
+        var originalContent = container.find(".info-right").data("originalContent");
+        var newContent = '<p><a href="#" class="back-overview">[Back to Overview]</a></p>' + response;
+        container.find(".info-title").html(roomName + " Details");
+        container.find(".info-content").html(newContent);
+      },
+      error: function(xhr, status, error) {
+        console.log("AJAX error:", status, error);
+        alert("Error retrieving room information.");
+      }
+    });
+  });
+
+  // Khi click vào link "Back to Overview", phục hồi lại nội dung ban đầu của Overview
+  $(document).on("click", ".back-overview", function(e) {
+    e.preventDefault();
+    var container = $(this).closest(".info-right");
+    var originalContent = container.data("originalContent");
+    var floorTitle = $(this).closest(".floor-container").find(".floor-header span").text();
+    container.find(".info-title").html(floorTitle + " Overview");
+    container.find(".info-content").html(originalContent);
+    // Cập nhật lại phần Overview (điều này sẽ làm mới lại trạng thái danh sách phòng)
+    updateOverview();
+  });
+
+  // Toggle ẩn/hiện Overview khi click vào tiêu đề Overview
+  $(document).on("click", ".overview-toggle", function() {
+    var container = $(this).closest(".info-right");
+    container.find(".info-content").toggle();
+  });
+</script>
+{% endblock %}
