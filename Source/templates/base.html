@@ -57,7 +57,7 @@
     {# Chỉ hiển thị nếu biến reservations được truyền vào template #}
     {% if reservations is defined %}
     <div class="reminder mt-4 p-3 bg-white rounded shadow-sm">
-      <h5 class="mb-2">Remider</h5>
+      <h5 class="mb-2">Reminder</h5>
       <ul class="list-unstyled mb-0">
         {% set upcoming = reservations 
             | selectattr('status','equalto','reserved') 
