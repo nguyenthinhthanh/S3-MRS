@@ -67,6 +67,46 @@
     width: 50%;
   }
 
+  .btn-checknow {
+    display: inline-block;
+    padding: 14px 28px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: linear-gradient(90deg, #ff616f 0%, #ffb56b 100%);
+    box-shadow: 0 4px 15px rgba(255, 97, 111, 0.3);
+    transition: 
+      transform 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out,
+      background 0.3s ease;
+    margin-top: 10px;
+    text-decoration: none;
+  }
+  
+  /* Hiệu ứng khi di chuột */
+  .btn-checknow:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(107, 78, 255, 0.3);
+    background: linear-gradient(90deg, #7a5cff 0%, #ab63ff 100%);
+  }
+  
+  /* Hiệu ứng khi nhấn */
+  .btn-checknow:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(107, 78, 255, 0.2);
+  }
+  
+  /* Focus outline cho truy cập bàn phím */
+  .btn-checknow:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(155, 84, 255, 0.4);
+  }
+  
+
 
   .form-group {
     display: flex;
