@@ -98,6 +98,7 @@
 
 {% block extra_scripts %}
 <script>
+
   // Cập nhật trạng thái của từng room dựa trên thời gian được chọn.
   // Với "Open Study Area" và "Individual Study": so sánh số lượng đặt với tổng sức chứa.
   // Với "Group Study": kiểm tra khoảng thời gian đặt.
@@ -205,32 +206,68 @@
   }
 
   $(document).ready(function() {
+    // Khi load trang, cập nhật dropdown giờ và trạng thái của phòng.
+    updateHours();
     $(".info-right").each(function() {
       var originalContent = $(this).find(".info-content").html();
       $(this).data("originalContent", originalContent);
     });
     updateRoomStatuses();
-    $("#date, #hour").on("change", function() {
-      // Cập nhật lại trạng thái các phòng
+
+    // Chỉ gọi updateHours() khi dropdown ngày thay đổi
+    $("#date").on("change", function() {
+      updateHours();
       updateRoomStatuses();
       updateOverview();
-      updateBuildingStatus();
+    });
 
-      // Nếu đang ở chế độ chi tiết (detail), tự động phục hồi về Overview.
-      $(".info-right").each(function(){
-          // Kiểm tra nếu xuất hiện link "back-overview" tức là đang ở chi tiết.
-          if ($(this).find(".back-overview").length > 0) {
-              var originalContent = $(this).data("originalContent");
-              // Lấy tiêu đề tòa từ .floor-header (đảm bảo tiêu đề Overview cũng được khôi phục)
-              var floorTitle = $(this).closest(".floor-container").find(".floor-header span").text();
-              $(this).find(".info-title").html(floorTitle + " Overview");
-              $(this).find(".info-content").html(originalContent);
-              // Sau đó, cập nhật lại nội dung Overview theo trạng thái các phòng
-              updateOverview();
-          }
-      });
+    // Với dropdown giờ, chỉ cập nhật trạng thái của phòng mà không gọi lại updateHours()
+    $("#hour").on("change", function() {
+      updateRoomStatuses();
+      updateOverview();
     });
   });
+
+  // Hàm cập nhật dropdown giờ theo ngày được chọn
+  function updateHours() {
+    // Lấy giá trị ngày được chọn từ dropdown
+    var selectedDay = $("#date").val();
+    // Lấy ngày hôm nay theo định dạng YYYY-MM-DD
+    var today = new Date().toISOString().split('T')[0];
+    // Lấy đối tượng select cho giờ và xóa các option cũ
+    var hoursSelect = $("#hour");
+    hoursSelect.empty();
+
+    var hoursList = [];
+    if (selectedDay === today) {
+      // Nếu chọn ngày hôm nay, so sánh với thời gian hiện tại
+      var now = new Date();
+      var currentHour = now.getHours();
+
+      // Nếu số phút khác 0 thì tăng thêm một giờ để lấy giờ tiếp theo
+      if (now.getMinutes() > 0) {
+        currentHour++;
+      }
+
+      // Nếu giờ hiện tại sau khi tăng nhỏ hơn 8 thì đặt startHour là 8
+      var startHour = currentHour < 8 ? 8 : currentHour;
+
+      // Sinh danh sách giờ từ startHour đến 22:00
+      for (let h = startHour; h < 23; h++) {
+        hoursList.push(`${h}:00`);
+      }
+    } else {
+      // Nếu chọn ngày khác (tương lai), hiển thị từ 08:00 đến 22:00
+      for (let h = 8; h < 23; h++) {
+        hoursList.push(`${h}:00`);
+      }
+    }
+
+    // Thêm các option vào dropdown giờ
+    hoursList.forEach(function(hour) {
+      hoursSelect.append(new Option(hour, hour));
+    });
+  }
 
   // Khi click vào room để xem chi tiết
   $(document).on("click", ".room-block", function() {

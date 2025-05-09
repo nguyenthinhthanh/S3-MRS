@@ -95,7 +95,7 @@ RESERVATIONS = {
         {
             "username": "student1",
             "start": (now - timedelta(minutes=10)).isoformat(),
-            "end": (now + timedelta(minutes=30)).isoformat()
+            "end": (now + timedelta(hours=1)).isoformat()
         }
     ],
     2: [
@@ -661,6 +661,7 @@ def filter_reservations():
                          "status": room["status"],
                          "username": res["username"]
                      })
+    print("Filtered rooms:", filtered)
     return jsonify(filtered)
 
 if __name__ == "__main__":
