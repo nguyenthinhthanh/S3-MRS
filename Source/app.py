@@ -23,7 +23,12 @@ app.config['MAIL_PASSWORD'] = 'yoao lvcb qjax qrrg'
 mail = Mail(app)
 
 # Dummy user (hard-coded)
-USERS = {'student1': 'password123'}
+USERS = {
+    'student1': 'password123',
+    'admin1': 'password123',
+    'teacher1': 'password123'
+}
+
 # Biến dữ liệu mới để lưu trữ người dùng với tên và vai trò
 user_list = {
     'admin1': 'Admin',
@@ -321,10 +326,10 @@ def notifications():
 def settings():
     if 'user' not in session:
         return redirect(url_for('login'))
-    if session.get('role') != 'Admin':  # Chỉ Admin mới được truy cập
-        flash('Access denied: Admins only.')
-        return redirect(url_for('home'))
+    if session.get('role') != 'Admin':
+        return render_template('unauthorized.html')
     return render_template('settings.html', users=user_list, spaces=spaces)
+
 
 @app.route('/add_user', methods=['POST'])
 def add_user():

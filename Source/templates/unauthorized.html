@@ -1,0 +1,26 @@
+<!-- templates/unauthorized.html -->
+{% extends "base.html" %}
+
+{% block title %}Access Denied - S3-MRS{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/unauthorized.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Dark overlay -->
+<div class="modal-overlay"></div>
+
+<!-- Modal box -->
+<div class="unauthorized-modal fade-in">
+  <div class="modal-header">
+    <h1>Access Denied</h1>
+  </div>
+  <div class="modal-body">
+    <p>You need <strong>Admin</strong> permission to access this page.</p>
+  </div>
+  <div class="modal-footer">
+    <a class="btn btn-primary unauthorized-btn" href="{{ url_for('home') }}">Quay về trang chủ</a>
+  </div>
+</div>
+{% endblock %}
