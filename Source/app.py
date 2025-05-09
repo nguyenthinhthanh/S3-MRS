@@ -1,13 +1,35 @@
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session, flash
 from datetime import datetime, timedelta
 import re
+from flask_mail import Mail, Message
+import os
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib import colors
+from flask import send_file
 
 app = Flask(__name__)
 app.secret_key = 's3mrs_demo_secret'  # dùng cho session
 
+# Mail config
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'hao.truongbk04102004@hcmut.edu.vn'          
+app.config['MAIL_PASSWORD'] = 'yoao lvcb qjax qrrg'              
+
+mail = Mail(app)
+
 # Dummy user (hard-coded)
 USERS = {'student1': 'password123'}
-
+# Biến dữ liệu mới để lưu trữ người dùng với tên và vai trò
+user_list = {
+    'admin1': 'Admin',
+    'student1': 'Student',
+    'teacher1': 'Teacher'
+}
 # Tạo danh sách 7 ngày liên tiếp với định dạng YYYY-MM-DD
 days = [(datetime.today() + timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7)]
 # Tạo danh sách giờ từ 08:00 đến 22:00
@@ -93,6 +115,9 @@ def login():
         password = request.form['password']
         if USERS.get(username) == password:
             session['user'] = username
+            ##########
+            session['role'] = user_list.get(username)
+            ##########
             return redirect(url_for('index'))
         else:
             flash('Invalid username or password', 'danger')
@@ -296,8 +321,152 @@ def notifications():
 def settings():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('settings.html')
+    if session.get('role') != 'Admin':  # Chỉ Admin mới được truy cập
+        flash('Access denied: Admins only.')
+        return redirect(url_for('home'))
+    return render_template('settings.html', users=user_list, spaces=spaces)
 
+@app.route('/add_user', methods=['POST'])
+def add_user():
+    # Kiểm tra xem người dùng đã đăng nhập và có vai trò là Admin không
+    if 'user' not in session or user_list.get(session['user']) != 'Admin':
+        flash("Bạn không có quyền thêm người dùng.", "danger")
+        return redirect(url_for('settings'))
+    
+    username = request.form['username']
+    role = request.form['role']
+    if username and role and username not in user_list:
+        user_list[username] = role
+        flash(f"Đã thêm người dùng '{username}' với vai trò '{role}'.")
+    else:
+        flash("Không thể thêm người dùng. Có thể tên đã tồn tại hoặc thiếu thông tin.")
+    return redirect(url_for('settings'))
+
+@app.route('/edit_user', methods=['POST'])
+def edit_user():
+    # Kiểm tra xem người dùng đã đăng nhập và có vai trò là Admin không
+    if 'user' not in session or user_list.get(session['user']) != 'Admin':
+        flash("Bạn không có quyền chỉnh sửa người dùng.", "danger")
+        return redirect(url_for('settings'))
+    
+    old_username = request.form['old_username']
+    new_username = request.form['new_username']
+    new_role = request.form['new_role']
+    
+    if old_username in user_list:
+        user_list[new_username] = new_role
+        if old_username != new_username:
+            del user_list[old_username]
+        flash(f"Đã cập nhật người dùng '{old_username}' thành '{new_username}' với vai trò '{new_role}'.")
+    else:
+        flash("Không tìm thấy người dùng cần sửa.")
+    return redirect(url_for('settings'))
+
+@app.route('/delete_user', methods=['POST'])
+def delete_user():
+    # Kiểm tra xem người dùng đã đăng nhập và có vai trò là Admin không
+    if 'user' not in session or user_list.get(session['user']) != 'Admin':
+        flash("Bạn không có quyền xóa người dùng.", "danger")
+        return redirect(url_for('settings'))
+
+    username = request.form['username']
+    if username in user_list:
+        del user_list[username]
+        flash(f"Đã xóa người dùng '{username}'.")
+    else:
+        flash("Không tìm thấy người dùng để xóa.")
+    return redirect(url_for('settings'))
+
+@app.route('/send_notification', methods=['POST'])
+def send_notification():
+    recipient = request.form['recipient']
+    subject = request.form['subject']
+    message_body = request.form['message']
+    attachment = request.files.get('attachment')
+
+    msg = Message(subject=subject,
+                  sender=app.config['MAIL_USERNAME'],
+                  recipients=[recipient],
+                  body=message_body)
+
+    if attachment and attachment.filename != '':
+        msg.attach(attachment.filename,
+                   attachment.content_type,
+                   attachment.read())
+
+    try:
+        mail.send(msg)
+        flash('Notification sent successfully!', 'success')
+    except Exception as e:
+        flash(f'Error sending email: {str(e)}', 'danger')
+
+    return redirect(url_for('settings'))
+
+@app.route('/export_report', methods=['POST'])
+def export_report():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+   
+    report_type = request.form.get('report_type')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    format_type = request.form.get('format')
+
+   
+    try:
+        start = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        end = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+    except Exception as e:
+        flash('Invalid date format', 'error')
+        return redirect(url_for('settings'))
+
+    
+    data = []
+    for space_id, reservations in RESERVATIONS.items():
+        space = next((s for s in spaces if s['id'] == space_id), None)
+        for r in reservations:
+            start_time = datetime.datetime.fromisoformat(r['start'])
+            end_time = datetime.datetime.fromisoformat(r['end'])
+
+           
+            if start <= start_time <= end:
+                data.append({
+                    'username': r['username'],
+                    'space_name': space['name'] if space else f'Room {space_id}',
+                    'start': start_time.strftime('%Y-%m-%d %H:%M'),
+                    'end': end_time.strftime('%Y-%m-%d %H:%M')
+                })
+
+   
+    if format_type == 'pdf':
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+
+        
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(50, height - 50, "Study Space Usage Report")
+
+        
+        pdf.setFont("Helvetica", 12)
+        pdf.drawString(50, height - 80, f"Report Type: {report_type}")
+        pdf.drawString(50, height - 100, f"From {start_date} to {end_date}")
+
+       
+        y = height - 140
+        for entry in data:
+            if y < 100:
+                pdf.showPage()
+                y = height - 50
+            pdf.drawString(50, y, f"{entry['username']} | {entry['space_name']} | {entry['start']} - {entry['end']}")
+            y -= 20
+
+        pdf.save()
+        buffer.seek(0)
+        return send_file(buffer, as_attachment=True, download_name="report.pdf", mimetype='application/pdf')
+
+    return redirect(url_for('settings'))
 @app.route('/check-in')
 def scan_qr():
     return render_template('scan_qr.html')
